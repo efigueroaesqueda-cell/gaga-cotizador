@@ -1168,8 +1168,8 @@ const SERVICIOS = {
     mayor: [
       {tipo:'ref', desc:'Aceite motor 3.6L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
       {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(225)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(760)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(275)},
+      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(360/IVA)},
+      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(275/IVA)},
       {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
       {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
     ]
@@ -1181,7 +1181,7 @@ const SERVICIOS = {
 // costoBujias = SOLO mano de obra (según si requiere remover múltiple)
 // numBujias = cantidad real de piezas (1 por cilindro en la mayoría; HEMI V8 usa 2 por cilindro = 16)
 // precioBujiaUnit = costo de refacción por pieza (NGK, ref. $299.83 c/u confirmado en juego Honda V6 6pzas=$1,799)
-const PRECIO_BUJIA_NGK = 299.83;
+const PRECIO_BUJIA_NGK = 212.12; // → precio GAGA ≈ $350 c/u (212.12 × 1.65 = $350)
 const GASOLINA_INFO = {
   TORNADO:  { gasolina: true, numBujias: 4,  costoBujias: 350,  notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
   VW:       { gasolina: true, numBujias: 4,  costoBujias: 350,  notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
