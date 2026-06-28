@@ -88,6 +88,80 @@ td{padding:9px 12px;vertical-align:middle}
 .toast.error{background:#e74c3c;color:#fff}
 /* GRUPO HEADER */
 .grupo-hdr td{background:#1e1e1e;color:#c8a951;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;border-top:2px solid #333}
+/* SIDE PANEL */
+.sp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:850}
+.sp-overlay.visible{display:block}
+.side-panel{position:fixed;top:0;right:-440px;width:440px;height:100vh;background:#1a1a1a;border-left:2px solid #c8a951;z-index:900;overflow-y:auto;transition:right .3s ease;display:flex;flex-direction:column}
+.side-panel.visible{right:0}
+.sp-hdr{background:#111;padding:16px 20px;border-bottom:2px solid #c8a951;display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0}
+.sp-hdr-left .sp-eco{font-size:22px;font-weight:700;color:#c8a951}
+.sp-hdr-left .sp-modelo{font-size:12px;color:#aaa;margin-top:3px}
+.sp-hdr-left .sp-placa{font-size:11px;color:#666;font-family:monospace;margin-top:1px}
+.sp-close{background:none;border:none;color:#aaa;font-size:24px;cursor:pointer;line-height:1;padding:0}
+.sp-close:hover{color:#fff}
+.sp-body{padding:16px;flex:1}
+.sp-section{margin-bottom:18px}
+.sp-section-title{font-size:10px;color:#c8a951;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #2a2a2a}
+.sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+.sp-item .sp-lbl{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.5px}
+.sp-item .sp-val{font-size:13px;color:#eee;font-weight:600;margin-top:2px}
+.sp-estado-box{background:#252525;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.sp-estado-left .sp-prox-lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.sp-estado-left .sp-prox-val{font-size:20px;font-weight:700;color:#c8a951;margin-top:2px}
+.sp-estado-left .sp-rest{font-size:12px;color:#aaa;margin-top:3px}
+.sp-hist-table{width:100%;border-collapse:collapse;font-size:12px}
+.sp-hist-table th{color:#666;text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;border-bottom:1px solid #2a2a2a}
+.sp-hist-table td{padding:8px 8px;border-bottom:1px solid #1e1e1e;color:#ccc;vertical-align:middle}
+.sp-hist-table tr:last-child td{border-bottom:none}
+.sp-km-chip{display:inline-block;background:#1a2a3a;color:#7ec8e3;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;border:1px solid #4a7a9b;white-space:nowrap}
+.sp-total-chip{color:#c8a951;font-weight:700}
+.sp-no-hist{text-align:center;padding:24px;color:#555;font-style:italic;font-size:12px}
+.sp-btn-cot{width:100%;background:#1a3a1a;border:1px solid #27ae60;color:#27ae60;padding:10px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px}
+.sp-btn-cot:hover{background:#27ae60;color:#111}
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media (max-width:900px) {
+  .hdr{padding:10px 14px}
+  .hdr-title{font-size:15px}
+  .summary{padding:10px 14px;gap:8px}
+  .card{min-width:100px;padding:10px 12px}
+  .card-num{font-size:22px}
+  .toolbar{padding:0 14px 10px;gap:6px}
+  .toolbar input[type=text]{width:160px}
+  .tbl-wrap{padding:0 8px 30px}
+  /* Ocultar columnas menos críticas en tablet */
+  thead th:nth-child(4),td:nth-child(4){display:none} /* Último Serv */
+  thead th:nth-child(8),td:nth-child(8){display:none} /* Cotización (va en side panel) */
+  .side-panel{width:100vw;right:-100vw}
+}
+@media (max-width:600px) {
+  .hdr-sub{display:none}
+  .hdr-link{padding:4px 8px;font-size:11px}
+  .summary{gap:6px}
+  .card{min-width:80px;padding:8px 10px}
+  .card-num{font-size:18px}
+  .card-lbl{font-size:10px}
+  .toolbar{flex-wrap:wrap}
+  .toolbar input[type=text]{width:100%;order:-1}
+  .filtros{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;width:100%}
+  .f-btn{white-space:nowrap;flex-shrink:0}
+  .btn-demo{flex-shrink:0}
+  .auto-save-note{display:none}
+  /* En móvil: tabla mínima, solo eco + km + estado */
+  thead th:nth-child(2),td:nth-child(2){display:none} /* Modelo/Placa */
+  thead th:nth-child(5),td:nth-child(5){display:none} /* Próximo */
+  thead th:nth-child(6),td:nth-child(6){display:none} /* Restantes */
+  .km-input{width:72px;font-size:12px}
+  td{padding:7px 6px}
+  /* Cards de unidad al hacer click — el side panel es fullscreen */
+  .side-panel{width:100vw;right:-100vw;border-left:none;border-top:2px solid #c8a951}
+  .sp-grid{grid-template-columns:1fr}
+}
+/* DEMO MODE */
+.btn-demo{background:transparent;border:1px dashed #c8a951;color:#c8a951;padding:5px 14px;border-radius:16px;font-size:11px;cursor:pointer;font-weight:600;letter-spacing:.3px}
+.btn-demo:hover{background:rgba(200,169,81,.1)}
+.btn-demo.activo{background:#c8a951;color:#111;border-style:solid}
+.demo-banner{display:none;background:#c8a951;color:#111;text-align:center;padding:5px;font-size:11px;font-weight:700;letter-spacing:.5px;position:sticky;top:0;z-index:800}
+.demo-banner.visible{display:block}
 </style>
 </head>
 <body>
@@ -123,6 +197,7 @@ td{padding:9px 12px;vertical-align:middle}
     <button class="f-btn" onclick="filtrar('verde',this)">🟢 Al día</button>
     <button class="f-btn" onclick="filtrar('gris',this)">⚫ Sin registro</button>
   </div>
+  <button class="btn-demo" id="btn-demo" onclick="toggleDemo()">🎭 Modo Demo</button>
   <span class="auto-save-note" id="save-note">⚡ Auto-guardado al cambiar renglón</span>
 </div>
 
@@ -163,7 +238,130 @@ td{padding:9px 12px;vertical-align:middle}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- DEMO BANNER -->
+<div class="demo-banner" id="demo-banner">⚠️ MODO DEMO ACTIVO — Datos simulados para presentación. No reflejan KM reales de GAGA.</div>
+
+<!-- SIDE PANEL OVERLAY -->
+<div class="sp-overlay" id="sp-overlay" onclick="cerrarFicha()"></div>
+
+<!-- SIDE PANEL -->
+<div class="side-panel" id="side-panel">
+  <div class="sp-hdr">
+    <div class="sp-hdr-left">
+      <div class="sp-eco" id="sp-eco">—</div>
+      <div class="sp-modelo" id="sp-modelo">—</div>
+      <div class="sp-placa" id="sp-placa">—</div>
+    </div>
+    <button class="sp-close" onclick="cerrarFicha()">✕</button>
+  </div>
+  <div class="sp-body" id="sp-body">
+    <div class="loading-msg">Cargando ficha…</div>
+  </div>
+</div>
+
 <script>
+// ── DEMO DATA ────────────────────────────────────────────────────────────────
+// Datos simulados para presentación a GAGA. Limpiar al cerrar contrato.
+const DEMO_KM_DATA = {
+  // TOYOTA HILUX/HIACE
+  'V-01': { km:47000, kmUltimo:32420, fecha:'2026-05-28' },  // VENCIDO 40k
+  'V-02': { km:9500,  kmUltimo:null,   fecha:'2026-06-18' }, // URGENTE → 10k (500 rest)
+  'V-05': { km:29200, kmUltimo:20000,  fecha:'2026-06-10' }, // URGENTE → 30k (800 rest)
+  'V-06': { km:37500, kmUltimo:30000,  fecha:'2026-06-01' }, // PRÓXIMO → 40k (2,500 rest)
+  'V-09': { km:58800, kmUltimo:50200,  fecha:'2026-06-15' }, // URGENTE → 60k (1,200 rest)
+  'V-10': { km:22000, kmUltimo:20000,  fecha:'2026-05-20' }, // AL DÍA → 30k (8,000 rest)
+  'V-12': { km:14000, kmUltimo:10000,  fecha:'2026-05-15' }, // AL DÍA → 20k (6,000 rest)
+  'V-13': { km:23000, kmUltimo:20000,  fecha:'2026-06-08' }, // AL DÍA → 30k (7,000 rest)
+  'V-15': { km:52000, kmUltimo:50000,  fecha:'2026-06-12' }, // AL DÍA → 60k (8,000 rest)
+  'V-16': { km:31500, kmUltimo:30000,  fecha:'2026-06-03' }, // AL DÍA → 40k (8,500 rest)
+  'V-17': { km:62000, kmUltimo:52800,  fecha:'2026-05-30' }, // VENCIDO 60k
+  'V-18': { km:8200,  kmUltimo:null,   fecha:'2026-06-20' }, // AL DÍA → 10k (1,800 rest)
+  'TP-14':{ km:45000, kmUltimo:40000,  fecha:'2026-05-25' }, // AL DÍA → 50k (5,000 rest)
+  // MITSUBISHI L200 4N16
+  'L-2':  { km:9200,  kmUltimo:null,   fecha:'2026-06-19' }, // URGENTE → 10k (800 rest)
+  'L-3':  { km:6500,  kmUltimo:null,   fecha:'2026-06-05' }, // AL DÍA → 10k (3,500 rest)
+  'L-7':  { km:4200,  kmUltimo:null,   fecha:'2026-06-22' }, // AL DÍA → 10k (5,800 rest)
+  'L-8':  { km:18500, kmUltimo:10000,  fecha:'2026-06-01' }, // AL DÍA → 20k (1,500 rest)... wait Math.ceil(10001/10000)*10000=20000. rest=1500. PRÓXIMO ✓
+  'L-10': { km:27800, kmUltimo:20000,  fecha:'2026-05-28' }, // PRÓXIMO → 30k (2,200 rest)
+  'L-11': { km:35000, kmUltimo:29800,  fecha:'2026-06-10' }, // AL DÍA → 30k... Math.ceil(29801/10000)*10000=30000. rest=-5000 VENCIDO. Change:
+  // Fix: L-11 km=33000, kmUltimo=30000 → próximo=40k, rest=7000 AL DÍA
+  'L-11': { km:33000, kmUltimo:30000,  fecha:'2026-06-10' }, // AL DÍA → 40k (7,000 rest)
+  // MITSUBISHI L200 4N15
+  'U-21': { km:55000, kmUltimo:49500,  fecha:'2026-05-20' }, // VENCIDO → 50k
+  'U-22': { km:28200, kmUltimo:20000,  fecha:'2026-06-08' }, // PRÓXIMO → 30k (1,800 rest)
+  'U-27': { km:34000, kmUltimo:30000,  fecha:'2026-06-02' }, // AL DÍA → 40k (6,000 rest)
+  // NISSAN NP300
+  'L-1':  { km:48000, kmUltimo:40000,  fecha:'2026-05-18' }, // AL DÍA → 50k (2,000 rest)... PRÓXIMO
+  'L-17': { km:22500, kmUltimo:20000,  fecha:'2026-06-15' }, // PRÓXIMO → 30k (2,500 rest... wait rest=7500, AL DÍA)
+  // Fix: L-17 km=27800, kmUltimo=20000 → próximo=30k, rest=2200. PRÓXIMO ✓
+  'L-17': { km:27800, kmUltimo:20000,  fecha:'2026-06-15' }, // PRÓXIMO → 30k (2,200 rest)
+  'TP-02':{ km:45000, kmUltimo:40000,  fecha:'2026-06-01' }, // AL DÍA → 50k (5,000 rest)
+  // CHEVROLET TORNADO
+  'L-5':  { km:17800, kmUltimo:10000,  fecha:'2026-06-10' }, // PRÓXIMO → 20k (2,200 rest)
+  'L-6':  { km:12000, kmUltimo:10000,  fecha:'2026-06-05' }, // AL DÍA → 20k (8,000 rest)
+  'L-14': { km:9100,  kmUltimo:null,   fecha:'2026-06-18' }, // URGENTE → 10k (900 rest)
+  // RAM 4000
+  'V-07': { km:38500, kmUltimo:30000,  fecha:'2026-06-12' }, // AL DÍA → 40k (1,500 rest)... PRÓXIMO
+  // Fix: V-07 km=38700 → rest=1300 PRÓXIMO ✓ (already)
+  'V-11': { km:52000, kmUltimo:50000,  fecha:'2026-05-30' }, // AL DÍA → 60k (8,000 rest)
+};
+
+// Historial simulado de servicios por unidad (para demo)
+const DEMO_HISTORIAL = {
+  'V-01': [
+    { fecha:'2024-03-10', km:10000, desc:'Servicio 10,000 KM — Afinación + Aceite', total:3850 },
+    { fecha:'2024-06-18', km:20000, desc:'Servicio 20,000 KM — Afinación mayor + Frenos', total:6200 },
+    { fecha:'2024-09-05', km:30000, desc:'Servicio 30,000 KM — Afinación + Aceite', total:3850 },
+  ],
+  'V-06': [
+    { fecha:'2024-04-12', km:10000, desc:'Servicio 10,000 KM — Afinación + Aceite', total:3850 },
+    { fecha:'2024-07-22', km:20000, desc:'Servicio 20,000 KM — Afinación mayor + Frenos', total:6200 },
+    { fecha:'2024-11-08', km:30000, desc:'Servicio 30,000 KM — Afinación + Aceite', total:3850 },
+  ],
+  'V-10': [
+    { fecha:'2024-05-20', km:10000, desc:'Servicio 10,000 KM — Afinación + Aceite', total:3850 },
+    { fecha:'2024-11-14', km:20000, desc:'Servicio 20,000 KM — Afinación mayor + Frenos', total:6200 },
+  ],
+  'V-15': [
+    { fecha:'2023-10-05', km:10000, desc:'Servicio 10,000 KM — Afinación + Aceite', total:3850 },
+    { fecha:'2024-01-18', km:20000, desc:'Servicio 20,000 KM — Afinación mayor', total:6200 },
+    { fecha:'2024-04-22', km:30000, desc:'Servicio 30,000 KM — Afinación + Aceite', total:3850 },
+    { fecha:'2024-08-10', km:40000, desc:'Servicio 40,000 KM — Afinación mayor + Distribución', total:9800 },
+    { fecha:'2024-12-03', km:50000, desc:'Servicio 50,000 KM — Afinación + Aceite', total:3850 },
+  ],
+  'V-17': [
+    { fecha:'2023-08-14', km:10000, desc:'Servicio 10,000 KM — Afinación + Aceite', total:3850 },
+    { fecha:'2023-11-20', km:20000, desc:'Servicio 20,000 KM — Afinación mayor', total:6200 },
+    { fecha:'2024-02-15', km:30000, desc:'Servicio 30,000 KM — Afinación + Aceite', total:3850 },
+    { fecha:'2024-05-30', km:40000, desc:'Servicio 40,000 KM — Afinación mayor + Frenos', total:7400 },
+    { fecha:'2024-09-08', km:50000, desc:'Servicio 50,000 KM — Afinación + Aceite', total:3850 },
+  ],
+  'U-21': [
+    { fecha:'2023-09-12', km:10000, desc:'Servicio 10,000 KM — Afinación + Aceite', total:3650 },
+    { fecha:'2023-12-18', km:20000, desc:'Servicio 20,000 KM — Afinación mayor', total:5800 },
+    { fecha:'2024-03-25', km:30000, desc:'Servicio 30,000 KM — Afinación + Aceite', total:3650 },
+    { fecha:'2024-07-02', km:40000, desc:'Servicio 40,000 KM — Afinación mayor + Distribución', total:9200 },
+  ],
+  'TP-02': [
+    { fecha:'2024-01-10', km:10000, desc:'Servicio 10,000 KM — Afinación + Aceite', total:3950 },
+    { fecha:'2024-04-28', km:20000, desc:'Servicio 20,000 KM — Afinación mayor', total:6400 },
+    { fecha:'2024-08-15', km:30000, desc:'Servicio 30,000 KM — Afinación + Aceite', total:3950 },
+    { fecha:'2024-12-20', km:40000, desc:'Servicio 40,000 KM — Afinación mayor + Frenos', total:7800 },
+  ],
+  'V-07': [
+    { fecha:'2024-02-14', km:10000, desc:'Servicio 10,000 KM — Afinación + Aceite', total:4200 },
+    { fecha:'2024-06-05', km:20000, desc:'Servicio 20,000 KM — Afinación mayor', total:7100 },
+    { fecha:'2024-10-18', km:30000, desc:'Servicio 30,000 KM — Afinación + Aceite + Bujías', total:5800 },
+  ],
+  'V-11': [
+    { fecha:'2023-11-08', km:10000, desc:'Servicio 10,000 KM — Afinación + Aceite', total:4200 },
+    { fecha:'2024-03-22', km:20000, desc:'Servicio 20,000 KM — Afinación mayor', total:7100 },
+    { fecha:'2024-07-14', km:30000, desc:'Servicio 30,000 KM — Afinación + Aceite', total:4200 },
+    { fecha:'2024-11-30', km:40000, desc:'Servicio 40,000 KM — Afinación mayor + Distribución', total:11500 },
+    { fecha:'2025-04-10', km:50000, desc:'Servicio 50,000 KM — Afinación + Aceite', total:4200 },
+  ],
+};
+
 // ── CONFIG ────────────────────────────────────────────────────────────────
 const SUPABASE_URL      = 'https://bgpugtgjbfseqwwcwpyd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJncHVndGdqYmZzZXF3d2N3cHlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjM4MjEsImV4cCI6MjA5ODEzOTgyMX0.iYp-y00qYWv9uvJX73eAASeKy5qbonXN3Jbwd4qRxPM';
@@ -374,8 +572,14 @@ const GRUPOS_LABEL = {
   U_17:'Hyundai i10',V_28:'Ram ProMaster',
 };
 
+// Normaliza texto para búsqueda: sin guiones, sin espacios, minúsculas
+function normSearch(str) {
+  return (str || '').toLowerCase().replace(/[-\s_]/g, '');
+}
+
 function renderTabla() {
-  const buscar = document.getElementById('buscar').value.toLowerCase();
+  const buscarRaw = document.getElementById('buscar').value;
+  const buscar = normSearch(buscarRaw);
   const tbody = document.getElementById('tbl-body');
   let html = '';
   let cntRojo=0, cntAmarillo=0, cntVerde=0, cntGris=0, cntTotal=0;
@@ -390,8 +594,8 @@ function renderTabla() {
 
     // Filtro estado
     if (filtroCurrent !== 'todos' && estadoKey !== filtroCurrent) return;
-    // Filtro búsqueda
-    const txt = `${eco} ${u.modelo} ${u.placas}`.toLowerCase();
+    // Filtro búsqueda (normalizado: L-200 = l200 = L200)
+    const txt = normSearch(`${eco} ${u.modelo} ${u.placas} ${u.marca}`);
     if (buscar && !txt.includes(buscar)) return;
 
     // Contador
@@ -424,7 +628,7 @@ function renderTabla() {
     const restHtml = sinRegistro ? '<span style="color:#555">—</span>'
       : `<span class="restante" style="color:${restColor}">${restLabel}</span>`;
 
-    html += `<tr class="${pendiente}" data-eco="${eco}">
+    html += `<tr class="${pendiente}" data-eco="${eco}" onclick="abrirFicha('${eco}')" style="cursor:pointer">
       <td><span class="eco">${eco}</span></td>
       <td><div class="modelo">${u.modelo} <span style="color:#666;font-size:10px">${u.año}</span></div><div class="placa">${u.placas}</div></td>
       <td><input class="km-input${changedKm}" type="number" min="0" max="999999" step="1" value="${kmVal}" placeholder="—" data-eco="${eco}" oninput="onKmInput(this,'${eco}')" onblur="onKmBlur('${eco}')"></td>
@@ -655,6 +859,144 @@ function toast(msg, esError=false) {
   t.textContent = msg;
   t.className = 'toast' + (esError?' error':'') + ' show';
   setTimeout(() => t.className='toast', 3000);
+}
+
+// ── MODO DEMO ────────────────────────────────────────────────────────────────
+let demoMode = false;
+
+function toggleDemo() {
+  demoMode = !demoMode;
+  const btn = document.getElementById('btn-demo');
+  const banner = document.getElementById('demo-banner');
+  if (demoMode) {
+    btn.classList.add('activo');
+    btn.textContent = '✕ Salir de Demo';
+    banner.classList.add('visible');
+    // Cargar datos demo en kmData (sin tocar Supabase)
+    Object.entries(DEMO_KM_DATA).forEach(([eco, d]) => {
+      if (!kmData[eco]) kmData[eco] = {};
+      kmData[eco]._realKm     = kmData[eco].km;
+      kmData[eco]._realUltimo = kmData[eco].kmUltimo;
+      kmData[eco]._realFecha  = kmData[eco].fecha;
+      kmData[eco].km      = d.km;
+      kmData[eco].kmUltimo= d.kmUltimo;
+      kmData[eco].fecha   = d.fecha;
+    });
+  } else {
+    btn.classList.remove('activo');
+    btn.textContent = '🎭 Modo Demo';
+    banner.classList.remove('visible');
+    // Restaurar datos reales
+    Object.entries(DEMO_KM_DATA).forEach(([eco]) => {
+      if (kmData[eco]) {
+        kmData[eco].km      = kmData[eco]._realKm;
+        kmData[eco].kmUltimo= kmData[eco]._realUltimo;
+        kmData[eco].fecha   = kmData[eco]._realFecha;
+      }
+    });
+  }
+  cerrarFicha();
+  renderTabla();
+}
+
+// ── FICHA DE UNIDAD (SIDE PANEL) ─────────────────────────────────────────────
+function abrirFicha(eco) {
+  const u = DB[eco];
+  if (!u) return;
+
+  const km      = kmEdits[eco]   !== undefined ? kmEdits[eco]   : (kmData[eco]?.km      ?? null);
+  const kmUltimo= ultimoEdits[eco]!== undefined ? ultimoEdits[eco]: (kmData[eco]?.kmUltimo ?? null);
+  const fecha   = kmData[eco]?.fecha ? new Date(kmData[eco].fecha).toLocaleDateString('es-MX') : '—';
+  const tv      = getTipoVehiculo(u);
+
+  // Header
+  document.getElementById('sp-eco').textContent    = eco;
+  document.getElementById('sp-modelo').textContent = `${u.modelo} ${u.año}`;
+  document.getElementById('sp-placa').textContent  = u.placas !== '—' ? u.placas : 'Sin placa registrada';
+
+  // Estado
+  let estadoHtml = '';
+  if (km !== null) {
+    const sem = calcSemaforo(km, kmUltimo);
+    const colorMap = {'s-rojo':'#e74c3c','s-amarillo':'#f39c12','s-verde':'#2ecc71'};
+    const color = colorMap[sem.clase] || '#aaa';
+    const restLabel = sem.restante <= 0
+      ? `${fmtKm(Math.abs(sem.restante))} VENCIDO`
+      : `${fmtKm(sem.restante)} para el siguiente servicio`;
+    estadoHtml = `
+      <div class="sp-estado-box">
+        <div class="sp-estado-left">
+          <div class="sp-prox-lbl">Próximo Servicio</div>
+          <div class="sp-prox-val">${fmtKm(sem.proximo)}</div>
+          <div class="sp-rest" style="color:${color}">${restLabel}</div>
+        </div>
+        <span class="semaforo ${sem.clase}">${sem.label}</span>
+      </div>`;
+  } else {
+    estadoHtml = `<div class="sp-estado-box"><span style="color:#666;font-style:italic">Sin KM registrado</span></div>`;
+  }
+
+  // Historial
+  const hist = demoMode ? (DEMO_HISTORIAL[eco] || []) : [];
+  let histHtml = '';
+  if (hist.length > 0) {
+    const totalAcum = hist.reduce((s,h) => s + h.total, 0);
+    histHtml = `
+      <table class="sp-hist-table">
+        <thead><tr><th>Fecha</th><th>KM</th><th>Servicio</th><th style="text-align:right">Total</th></tr></thead>
+        <tbody>
+          ${hist.map(h => `<tr>
+            <td style="white-space:nowrap">${new Date(h.fecha).toLocaleDateString('es-MX')}</td>
+            <td><span class="sp-km-chip">${h.km.toLocaleString('es-MX')}</span></td>
+            <td style="font-size:11px;color:#aaa">${h.desc}</td>
+            <td style="text-align:right" class="sp-total-chip">${fmt(h.total)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="text-align:right;margin-top:8px;font-size:12px;color:#888">
+        Inversión acumulada: <span style="color:#c8a951;font-weight:700">${fmt(totalAcum)}</span>
+      </div>`;
+  } else {
+    histHtml = `<div class="sp-no-hist">Sin historial de servicios registrado</div>`;
+  }
+
+  // Render completo
+  document.getElementById('sp-body').innerHTML = `
+    <!-- ESTADO -->
+    ${estadoHtml}
+
+    <!-- FICHA TÉCNICA -->
+    <div class="sp-section">
+      <div class="sp-section-title">Ficha Técnica</div>
+      <div class="sp-grid">
+        <div class="sp-item"><div class="sp-lbl">Marca</div><div class="sp-val">${u.marca}</div></div>
+        <div class="sp-item"><div class="sp-lbl">Año</div><div class="sp-val">${u.año}</div></div>
+        <div class="sp-item"><div class="sp-lbl">Modelo</div><div class="sp-val">${u.modelo}</div></div>
+        <div class="sp-item"><div class="sp-lbl">Motor</div><div class="sp-val" style="font-size:11px">${u.motor}</div></div>
+        <div class="sp-item"><div class="sp-lbl">Placas</div><div class="sp-val" style="font-family:monospace">${u.placas}</div></div>
+        <div class="sp-item"><div class="sp-lbl">KM Actual</div><div class="sp-val">${km !== null ? fmtKm(km) : '—'}</div></div>
+        <div class="sp-item"><div class="sp-lbl">Último Servicio KM</div><div class="sp-val">${kmUltimo ? fmtKm(kmUltimo) : '—'}</div></div>
+        <div class="sp-item"><div class="sp-lbl">Última captura</div><div class="sp-val">${fecha}</div></div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="sp-section">
+      <div class="sp-section-title">Historial de Servicios</div>
+      ${histHtml}
+    </div>
+
+    <!-- BOTÓN COTIZACIÓN -->
+    ${tv && km !== null ? `<button class="sp-btn-cot" onclick="verCotizacion('${eco}',event)">💰 Ver cotización del próximo servicio →</button>` : ''}
+  `;
+
+  document.getElementById('sp-overlay').classList.add('visible');
+  document.getElementById('side-panel').classList.add('visible');
+}
+
+function cerrarFicha() {
+  document.getElementById('sp-overlay').classList.remove('visible');
+  document.getElementById('side-panel').classList.remove('visible');
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
