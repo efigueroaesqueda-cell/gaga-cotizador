@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Henry's Diagnostics — Portal GAGA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0d0d0d;color:#eee}
+
+canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── PANTALLA BIENVENIDA ── */
+#welcome{
+  position:fixed;inset:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .7s ease,transform .7s ease;
+}
+#welcome.oculto{opacity:0;transform:scale(1.04);pointer-events:none}
+
+.glass{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(200,169,81,.22);
+  border-radius:22px;
+  padding:52px 58px 46px;
+  text-align:center;
+  backdrop-filter:blur(20px);
+  box-shadow:0 0 70px rgba(200,169,81,.07),0 28px 70px rgba(0,0,0,.65);
+  max-width:480px;width:92%;
+}
+
+.logo-ring{
+  width:78px;height:78px;border-radius:50%;
+  background:linear-gradient(135deg,#c8a951,#7d6020);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 24px;
+  box-shadow:0 0 36px rgba(200,169,81,.45);
+  font-size:30px;font-weight:900;color:#111;
+}
+
+.bienvenido-label{
+  font-size:10px;letter-spacing:3.5px;text-transform:uppercase;
+  color:#c8a951;margin-bottom:12px;opacity:.85;
+}
+.portal-titulo{
+  font-size:25px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:10px;
+}
+.portal-sub{
+  font-size:13px;color:#777;margin-bottom:30px;line-height:1.6;
+}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(200,169,81,.28),transparent);margin-bottom:26px}
+
+.badge-flotilla{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(200,169,81,.09);border:1px solid rgba(200,169,81,.28);
+  border-radius:20px;padding:5px 16px;font-size:12px;color:#c8a951;
+  margin-bottom:32px;
+}
+.badge-dot{width:7px;height:7px;background:#c8a951;border-radius:50%;animation:pulse 1.5s infinite}
+
+.btn-entrar{
+  display:inline-flex;align-items:center;gap:11px;
+  background:linear-gradient(135deg,#c8a951 0%,#a07820 100%);
+  color:#111;font-size:15px;font-weight:800;
+  padding:15px 44px;border-radius:40px;border:none;cursor:pointer;
+  letter-spacing:.5px;
+  box-shadow:0 4px 28px rgba(200,169,81,.38);
+  transition:transform .2s,box-shadow .2s;
+  position:relative;overflow:hidden;
+}
+.btn-entrar::after{
+  content:'';position:absolute;inset:0;
+  background:rgba(255,255,255,.13);
+  border-radius:inherit;opacity:0;transition:opacity .2s;
+}
+.btn-entrar:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(200,169,81,.55)}
+.btn-entrar:hover::after{opacity:1}
+.btn-entrar:active{transform:translateY(0)}
+
+.arrow-icon{font-size:18px;transition:transform .2s}
+.btn-entrar:hover .arrow-icon{transform:translateX(4px)}
+
+.hd-footer{margin-top:30px;font-size:11px;color:#3a3a3a;letter-spacing:.4px}
+.hd-footer span{color:#555}
+
+/* ── PANTALLA MÓDULOS ── */
+#modulos{
+  position:fixed;inset:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .6s ease;
+  padding:20px;overflow-y:auto;
+}
+#modulos.visible{opacity:1;pointer-events:all}
+
+.mod-header{text-align:center;margin-bottom:44px}
+.mod-greeting{font-size:10px;letter-spacing:3.5px;color:#c8a951;text-transform:uppercase;margin-bottom:10px}
+.mod-titulo{font-size:28px;font-weight:700;color:#fff}
+.mod-sub{font-size:13px;color:#555;margin-top:7px}
+
+.cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;max-width:980px}
+
+.card{
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:20px;
+  padding:36px 28px 30px;
+  width:290px;min-width:240px;
+  text-align:center;
+  cursor:pointer;text-decoration:none;color:inherit;
+  position:relative;overflow:hidden;
+  transition:transform .28s,border-color .28s,box-shadow .28s;
+  opacity:0;transform:translateY(32px);
+  backdrop-filter:blur(14px);
+}
+.card.aparece{opacity:1;transform:translateY(0);transition:opacity .55s ease,transform .55s ease,border-color .28s,box-shadow .28s}
+.card-glow{
+  position:absolute;inset:0;
+  opacity:0;transition:opacity .3s;
+  border-radius:inherit;
+}
+.card:hover{transform:translateY(-8px)}
+.card:hover .card-glow{opacity:1}
+.card-1:hover{border-color:rgba(200,169,81,.55);box-shadow:0 14px 44px rgba(200,169,81,.18)}
+.card-1 .card-glow{background:radial-gradient(ellipse at top,rgba(200,169,81,.07),transparent 70%)}
+.card-2:hover{border-color:rgba(46,204,113,.45);box-shadow:0 14px 44px rgba(46,204,113,.14)}
+.card-2 .card-glow{background:radial-gradient(ellipse at top,rgba(46,204,113,.07),transparent 70%)}
+.card-3:hover{border-color:rgba(126,200,227,.45);box-shadow:0 14px 44px rgba(126,200,227,.14)}
+.card-3 .card-glow{background:radial-gradient(ellipse at top,rgba(126,200,227,.07),transparent 70%)}
+
+.card-arrow{position:absolute;right:18px;top:18px;font-size:14px;color:#333;transition:color .25s,transform .25s}
+.card-1:hover .card-arrow{color:#c8a951;transform:translate(3px,-3px)}
+.card-2:hover .card-arrow{color:#2ecc71;transform:translate(3px,-3px)}
+.card-3:hover .card-arrow{color:#7ec8e3;transform:translate(3px,-3px)}
+
+.card-icon{
+  font-size:48px;margin-bottom:18px;display:block;
+  transition:transform .3s;
+  filter:drop-shadow(0 0 10px rgba(200,169,81,.2));
+}
+.card:hover .card-icon{transform:scale(1.15) rotate(-3deg)}
+
+.card-titulo{font-size:18px;font-weight:700;color:#fff;margin-bottom:9px}
+.card-desc{font-size:12px;color:#666;line-height:1.7;margin-bottom:22px}
+
+.card-badge{
+  display:inline-block;padding:4px 15px;border-radius:20px;
+  font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+}
+.badge-gold{background:rgba(200,169,81,.12);color:#c8a951;border:1px solid rgba(200,169,81,.35)}
+.badge-green{background:rgba(46,204,113,.1);color:#2ecc71;border:1px solid rgba(46,204,113,.3)}
+.badge-blue{background:rgba(126,200,227,.1);color:#7ec8e3;border:1px solid rgba(126,200,227,.3)}
+
+/* número de módulo decorativo */
+.card-num{
+  position:absolute;left:20px;top:18px;
+  font-size:11px;font-weight:700;letter-spacing:1px;
+  opacity:.18;
+}
+.card-1 .card-num{color:#c8a951}
+.card-2 .card-num{color:#2ecc71}
+.card-3 .card-num{color:#7ec8e3}
+
+.mod-footer{margin-top:38px;font-size:11px;color:#2a2a2a;text-align:center;letter-spacing:.5px}
+
+/* ── ANIMACIONES ── */
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.4)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:660px){
+  .glass{padding:36px 26px 32px}
+  .portal-titulo{font-size:20px}
+  .card{width:100%;max-width:380px}
+  .mod-titulo{font-size:22px}
+  .mod-header{margin-bottom:28px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<!-- ── BIENVENIDA ── -->
+<div id="welcome">
+  <div class="glass">
+    <div class="logo-ring">H</div>
+    <div class="bienvenido-label">Henry's Diagnostics</div>
+    <div class="portal-titulo">Portal de Administración<br>Flotilla GAGA</div>
+    <p class="portal-sub">Sistema integral de gestión, control y seguimiento<br>de mantenimiento vehicular</p>
+    <div class="divider"></div>
+    <div class="badge-flotilla">
+      <span class="badge-dot"></span>
+      138 unidades activas
+    </div>
+    <br>
+    <button class="btn-entrar" onclick="entrar()">
+      Acceder al Portal <span class="arrow-icon">→</span>
+    </button>
+    <div class="hd-footer">Administrado por <span>Henry's Diagnostics</span> · Chihuahua, Chih.</div>
+  </div>
+</div>
+
+<!-- ── MÓDULOS ── -->
+<div id="modulos">
+  <div class="mod-header">
+    <div class="mod-greeting">Sistema activo</div>
+    <div class="mod-titulo">¿Qué deseas consultar?</div>
+    <div class="mod-sub">Selecciona un módulo para continuar</div>
+  </div>
+
+  <div class="cards">
+
+    <a class="card card-1" href="gaga-cotizador/flotilla.html" id="c1">
+      <span class="card-num">01</span>
+      <span class="card-arrow">↗</span>
+      <div class="card-glow"></div>
+      <span class="card-icon">🚛</span>
+      <div class="card-titulo">Portal Flotilla</div>
+      <div class="card-desc">Estado en tiempo real de cada unidad. Semáforo de mantenimiento, historial de servicios y ficha técnica completa.</div>
+      <span class="card-badge badge-gold">Módulo Principal</span>
+    </a>
+
+    <a class="card card-2" href="gaga-cotizador/proyeccion.html" id="c2">
+      <span class="card-num">02</span>
+      <span class="card-arrow">↗</span>
+      <div class="card-glow"></div>
+      <span class="card-icon">📊</span>
+      <div class="card-titulo">Proyección de Inversión</div>
+      <div class="card-desc">Dashboard ejecutivo con estimado financiero por período. Cuánto invertir hoy, en 7, 15 y 30 días.</div>
+      <span class="card-badge badge-green">Ejecutivo</span>
+    </a>
+
+    <a class="card card-3" href="gaga-cotizador/index.html" id="c3">
+      <span class="card-num">03</span>
+      <span class="card-arrow">↗</span>
+      <div class="card-glow"></div>
+      <span class="card-icon">🧮</span>
+      <div class="card-titulo">Cotizador</div>
+      <div class="card-desc">Genera cotizaciones de mantenimiento al instante por modelo y kilometraje. Rápido y preciso.</div>
+      <span class="card-badge badge-blue">Herramienta</span>
+    </a>
+
+  </div>
+  <div class="mod-footer">Henry's Diagnostics · Sistema de Gestión de Flotillas · v1.0</div>
+</div>
+
+<script>
+// ── PARTÍCULAS ──────────────────────────────────────────────────────────
+const canvas = document.getElementById('bg');
+const ctx    = canvas.getContext('2d');
+let W, H;
+
+function resize(){ W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+const pts = Array.from({length:100},()=>({
+  x: Math.random()*1000,
+  y: Math.random()*1000,
+  vx:(Math.random()-.5)*.25,
+  vy:-(Math.random()*.35+.08),
+  r: Math.random()*1.4+.3,
+  o: Math.random()*.45+.08
+}));
+
+function loop(){
+  ctx.clearRect(0,0,W,H);
+  pts.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.y<-6){p.y=H+6;p.x=Math.random()*W}
+    if(p.x<-6)p.x=W+6; if(p.x>W+6)p.x=-6;
+  });
+  // conexiones
+  for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);
+    if(d<110){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);
+      ctx.strokeStyle=`rgba(200,169,81,${.055*(1-d/110)})`;ctx.lineWidth=.5;ctx.stroke()}
+  }
+  pts.forEach(p=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(200,169,81,${p.o})`;ctx.fill();
+  });
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ── TRANSICIÓN ──────────────────────────────────────────────────────────
+function entrar(){
+  document.getElementById('welcome').classList.add('oculto');
+  setTimeout(()=>{
+    document.getElementById('modulos').classList.add('visible');
+    ['c1','c2','c3'].forEach((id,i)=>{
+      setTimeout(()=>document.getElementById(id).classList.add('aparece'), 80+i*150);
+    });
+  },520);
+}
+</script>
+</body>
+</html>
