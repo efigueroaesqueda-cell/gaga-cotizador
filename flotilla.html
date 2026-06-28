@@ -260,11 +260,14 @@ td{padding:9px 12px;vertical-align:middle}
 </div>
 
 <script>
-// ── DEMO DATA (generador automático — todas las unidades) ─────────────────
-// Genera datos simulados realistas para TODAS las unidades del DB.
+// ── DEMO DATA ─────────────────────────────────────────────────────────────
+// Se genera la primera vez que se activa el modo demo (DB ya está definido).
 // Determinístico: mismo resultado siempre para el mismo eco.
 // Limpiar al cerrar contrato con GAGA.
-const { DEMO_KM_DATA, DEMO_HISTORIAL } = (function() {
+let DEMO_KM_DATA = null, DEMO_HISTORIAL = null;
+function buildDemoData() {
+  if (DEMO_KM_DATA) return;
+  const _gen = (function() {
 
   // Random seeded determinístico por string
   function sr(seed, min, max) {
@@ -398,7 +401,10 @@ const { DEMO_KM_DATA, DEMO_HISTORIAL } = (function() {
   });
 
   return { DEMO_KM_DATA: KM, DEMO_HISTORIAL: HIST };
-})();
+  })();
+  DEMO_KM_DATA = _gen.DEMO_KM_DATA;
+  DEMO_HISTORIAL = _gen.DEMO_HISTORIAL;
+}
 
 // ── CONFIG ────────────────────────────────────────────────────────────────
 const SUPABASE_URL      = 'https://bgpugtgjbfseqwwcwpyd.supabase.co';
@@ -903,6 +909,7 @@ function toast(msg, esError=false) {
 let demoMode = false;
 
 function toggleDemo() {
+  buildDemoData(); // genera los datos si es la primera vez
   demoMode = !demoMode;
   const btn = document.getElementById('btn-demo');
   const banner = document.getElementById('demo-banner');
