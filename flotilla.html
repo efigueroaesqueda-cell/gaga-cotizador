@@ -324,7 +324,10 @@ function getTipoVehiculo(v) {
 function calcSemaforo(kmActual, kmUltimoServicio) {
   let proximo;
   if (kmUltimoServicio && kmUltimoServicio > 0) {
-    proximo = kmUltimoServicio + 10000;
+    // Redondear al múltiplo de 10,000 que sigue al km del último servicio
+    // Ej: último=32,420 → raw=42,420 → redondeado=50,000 (donde sí hay paquete)
+    const rawProximo = kmUltimoServicio + 10000;
+    proximo = Math.ceil(rawProximo / 10000) * 10000;
   } else {
     proximo = Math.ceil((kmActual + 1) / 10000) * 10000;
   }
