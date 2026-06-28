@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proyección de Inversión — Flotilla GAGA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#1a1a1a;color:#eee;min-height:100vh}
+.hdr{background:#111;border-bottom:3px solid #c8a951;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.hdr-logo{display:flex;align-items:center;gap:12px}
+.hdr-title{font-size:18px;font-weight:700;color:#c8a951;letter-spacing:.5px}
+.hdr-sub{font-size:12px;color:#aaa;margin-top:2px}
+.hdr-link{font-size:12px;color:#c8a951;text-decoration:none;border:1px solid #c8a951;padding:5px 12px;border-radius:4px}
+.hdr-link:hover{background:#c8a951;color:#111}
+/* CONTROLES */
+.controles{padding:16px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:#111;border-bottom:1px solid #2a2a2a}
+.ctrl-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.ctrl-group{display:flex;flex-direction:column}
+.ctrl-input{background:#2a2a2a;border:1px solid #444;color:#eee;padding:6px 10px;border-radius:5px;font-size:13px;width:120px}
+.demo-banner{display:none;background:#c8a951;color:#111;text-align:center;padding:5px;font-size:11px;font-weight:700;letter-spacing:.5px}
+.demo-banner.visible{display:block}
+.btn-demo{background:transparent;border:1px dashed #c8a951;color:#c8a951;padding:6px 14px;border-radius:16px;font-size:11px;cursor:pointer;font-weight:600}
+.btn-demo.activo{background:#c8a951;color:#111;border-style:solid}
+/* RESUMEN EJECUTIVO */
+.resumen{display:flex;gap:12px;padding:20px 24px;flex-wrap:wrap}
+.res-card{background:#222;border-radius:10px;padding:18px 22px;flex:1;min-width:160px;border-top:3px solid #555;position:relative}
+.res-card.rojo{border-color:#e74c3c}
+.res-card.amarillo{border-color:#f39c12}
+.res-card.verde{border-color:#2ecc71}
+.res-card.total{border-color:#c8a951}
+.res-titulo{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.res-num{font-size:26px;font-weight:700;color:#fff}
+.res-card.rojo .res-num{color:#e74c3c}
+.res-card.amarillo .res-num{color:#f39c12}
+.res-card.verde .res-num{color:#2ecc71}
+.res-card.total .res-num{color:#c8a951}
+.res-sub{font-size:12px;color:#666;margin-top:4px}
+.res-monto{font-size:14px;font-weight:700;margin-top:8px}
+.res-card.rojo .res-monto{color:#e74c3c}
+.res-card.amarillo .res-monto{color:#f39c12}
+.res-card.verde .res-monto{color:#aaa}
+.res-card.total .res-monto{color:#c8a951}
+/* PERÍODOS */
+.periodos{padding:0 24px 20px;display:flex;gap:12px;flex-wrap:wrap}
+.periodo-card{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:14px 18px;flex:1;min-width:200px}
+.periodo-titulo{font-size:11px;color:#c8a951;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:10px}
+.periodo-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #222;font-size:12px}
+.periodo-row:last-child{border-bottom:none;font-weight:700;font-size:13px;padding-top:8px}
+.periodo-label{color:#aaa}
+.periodo-val{color:#eee;font-weight:600}
+.periodo-monto{color:#c8a951;font-weight:700}
+/* TABLA */
+.seccion{padding:0 24px 40px}
+.seccion-title{font-size:14px;font-weight:700;color:#c8a951;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:#c8a951;color:#111}
+thead th{padding:10px 12px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+tbody tr{border-bottom:1px solid #2a2a2a;transition:background .15s}
+tbody tr:hover{background:#252525}
+td{padding:9px 12px;vertical-align:middle}
+.eco{font-weight:700;color:#c8a951}
+.modelo{font-size:11px;color:#aaa}
+.semaforo{display:inline-block;padding:3px 9px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+.s-verde{background:#1a4a2a;color:#2ecc71;border:1px solid #2ecc71}
+.s-amarillo{background:#3a2a00;color:#f39c12;border:1px solid #f39c12}
+.s-rojo{background:#3a0a0a;color:#e74c3c;border:1px solid #e74c3c}
+.s-gris{background:#222;color:#888;border:1px solid #555}
+.monto{font-weight:700;color:#c8a951}
+.km-chip{display:inline-block;background:#1a2a3a;color:#7ec8e3;padding:2px 8px;border-radius:8px;font-size:11px;border:1px solid #4a7a9b}
+.dias-chip{display:inline-block;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600}
+.dias-hoy{background:#3a0a0a;color:#e74c3c;border:1px solid #e74c3c}
+.dias-semana{background:#3a2a00;color:#f39c12;border:1px solid #f39c12}
+.dias-quincena{background:#1a3a00;color:#2ecc71;border:1px solid #2ecc71}
+.dias-mes{background:#1a1a3a;color:#7ec8e3;border:1px solid #4a7a9b}
+.dias-futuro{background:#222;color:#666;border:1px solid #444}
+.grupo-hdr td{background:#1e1e1e;color:#c8a951;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:7px 12px;border-top:2px solid #333}
+.loading-msg{text-align:center;padding:40px;color:#888;font-style:italic}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#2ecc71;color:#111;padding:12px 20px;border-radius:8px;font-weight:700;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+@media(max-width:700px){
+  .hdr-sub{display:none}
+  .resumen,.periodos{padding:12px}
+  .seccion{padding:0 12px 30px}
+  .res-card{min-width:130px;padding:12px 14px}
+  thead th:nth-child(5),td:nth-child(5){display:none}
+  thead th:nth-child(6),td:nth-child(6){display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="demo-banner" id="demo-banner">⚠️ MODO DEMO ACTIVO — Datos simulados para presentación.</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-logo">
+    <svg viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="6" fill="#c8a951"/><text x="20" y="27" text-anchor="middle" font-size="18" fill="#111" font-weight="bold">H</text></svg>
+    <div>
+      <div class="hdr-title">Henry's Diagnostics — Proyección de Inversión</div>
+      <div class="hdr-sub">Flotilla GAGA · Estimado de mantenimiento por período</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <a href="flotilla.html" class="hdr-link">← Portal Flotilla</a>
+    <a href="index.html" class="hdr-link">↩ Cotizador</a>
+  </div>
+</div>
+
+<!-- CONTROLES -->
+<div class="controles">
+  <div class="ctrl-group">
+    <div class="ctrl-label">KM promedio / día por unidad</div>
+    <input class="ctrl-input" type="number" id="km-dia" value="200" min="50" max="800" step="50" oninput="recalcular()">
+  </div>
+  <div style="align-self:flex-end;padding-bottom:2px;font-size:12px;color:#666;max-width:400px">
+    Ajusta el promedio de KM diarios para estimar cuándo cada unidad llegará a su próximo servicio.
+  </div>
+  <div style="margin-left:auto;align-self:flex-end">
+    <button class="btn-demo" id="btn-demo" onclick="toggleDemo()">🎭 Modo Demo</button>
+  </div>
+</div>
+
+<!-- RESUMEN EJECUTIVO -->
+<div class="resumen" id="resumen">
+  <div class="loading-msg" style="width:100%">Cargando proyección…</div>
+</div>
+
+<!-- PERÍODOS -->
+<div class="periodos" id="periodos"></div>
+
+<!-- TABLA DETALLE -->
+<div class="seccion">
+  <div class="seccion-title">📋 Detalle por unidad — ordenado por urgencia</div>
+  <table id="tbl">
+    <thead>
+      <tr>
+        <th>ECO</th>
+        <th>Modelo</th>
+        <th>KM Actual</th>
+        <th>Próximo Serv.</th>
+        <th>KM Rest.</th>
+        <th>Días Est.</th>
+        <th>Estado</th>
+        <th>Costo Est.</th>
+      </tr>
+    </thead>
+    <tbody id="tbl-body">
+      <tr><td colspan="8" class="loading-msg">Cargando…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL      = 'https://bgpugtgjbfseqwwcwpyd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJncHVndGdqYmZzZXF3d2N3cHlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjM4MjEsImV4cCI6MjA5ODEzOTgyMX0.iYp-y00qYWv9uvJX73eAASeKy5qbonXN3Jbwd4qRxPM';
+const HEADERS = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` };
+
+// ── BASE DE DATOS DE UNIDADES (igual que flotilla.html) ───────────────────
+const DB = {
+  'V-01':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HW-8359-A'},
+  'V-02':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HW-8358-A'},
+  'V-05':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HU2326-A'},
+  'V-06':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HU2327-A'},
+  'V-09':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HW-8359-A'},
+  'V-10':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HW-8370-A'},
+  'V-12':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HW-8372-A'},
+  'V-13':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HW-8392-A'},
+  'V-15':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HW-8398-A'},
+  'V-16':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HW-8397-A'},
+  'V-17':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'HW-8362-A'},
+  'V-18':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,grupo:'HILUX',placas:'HY5703-A'},
+  'V-24':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,grupo:'HILUX',placas:'HY5746-A'},
+  'V-25':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,grupo:'HILUX',placas:'HY5745-A'},
+  'V-30':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,grupo:'HILUX',placas:'JD0429-A'},
+  'U-10':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'FH0342-A'},
+  'U-18':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2019,grupo:'HILUX',placas:'FG-8620-A'},
+  'U-19':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'FH0343-A'},
+  'U-39':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2021,grupo:'HILUX',placas:'FG-9487-A'},
+  'U-41':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2018,grupo:'HILUX',placas:'FJ-0730-A'},
+  'U-48':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'JY-48-107'},
+  'U-49':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,grupo:'HILUX',placas:'JY-48-106'},
+  'U-50':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2021,grupo:'HILUX',placas:'JY-12-885'},
+  'v-34':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,grupo:'HILUX',placas:'FJ4339-A'},
+  'v-43':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,grupo:'HILUX',placas:'FJ-6189-A'},
+  'TP-14':{marca:'Toyota',modelo:'Hiace Commuter',año:2022,grupo:'HILUX',placas:'HUU410-A'},
+  'L-2':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'HY5701-A'},
+  'L-3':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'HY5702-A'},
+  'L-4':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'HY5703-A'},
+  'L-7':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'HY5706-A'},
+  'L-8':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'HY5707-A'},
+  'L-10':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'HY5709-A'},
+  'L-11':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'HY5710-A'},
+  'L-12':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'HY5711-A'},
+  'L-13':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'HY5712-A'},
+  'L-24':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2026,grupo:'L200_4N16',placas:'JD0428-A'},
+  'L-25':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2026,grupo:'L200_4N16',placas:'JD0430-A'},
+  'L-30':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2026,grupo:'L200_4N16',placas:'JF0301-A'},
+  'V-19':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'HY5718-A'},
+  'v-35':{marca:'Mitsubishi',modelo:'L200 Rodeo 4x4',año:2025,grupo:'L200_4N16',placas:'FJ5001-A'},
+  'U-21':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,grupo:'L200_4N15',placas:'HH-9001-A'},
+  'U-22':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,grupo:'L200_4N15',placas:'HH-9002-A'},
+  'U-27':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2023,grupo:'L200_4N15',placas:'HK-0101-A'},
+  'U-30':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2023,grupo:'L200_4N15',placas:'HK-0104-A'},
+  'U-32':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,grupo:'L200_4N15',placas:'HH-9006-A'},
+  'U-33':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,grupo:'L200_4N15',placas:'HH-9007-A'},
+  'U-40':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2023,grupo:'L200_4N15',placas:'HK-0114-A'},
+  'U-46':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,grupo:'L200_4N15',placas:'HH-9020-A'},
+  'U-47':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,grupo:'L200_4N15',placas:'HH-9021-A'},
+  'U-16':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2021,grupo:'L200_4D56',placas:'FH-5016-A'},
+  'U-34':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2021,grupo:'L200_4D56',placas:'FH-5034-A'},
+  'U-38':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2021,grupo:'L200_4D56',placas:'FH-5038-A'},
+  'L-5':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,grupo:'TORNADO',placas:'HY5704-A'},
+  'L-6':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,grupo:'TORNADO',placas:'HY5705-A'},
+  'L-14':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,grupo:'TORNADO',placas:'HY5713-A'},
+  'L-15':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,grupo:'TORNADO',placas:'HY5714-A'},
+  'L-16':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,grupo:'TORNADO',placas:'HY5715-A'},
+  'L-21':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,grupo:'TORNADO',placas:'JD0421-A'},
+  'L-22':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,grupo:'TORNADO',placas:'JD0422-A'},
+  'L-23':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,grupo:'TORNADO',placas:'JD0423-A'},
+  'L-29':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,grupo:'TORNADO',placas:'JF0201-A'},
+  'V-37':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,grupo:'TORNADO',placas:'HY5736-A'},
+  'V-38':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,grupo:'TORNADO',placas:'HY5737-A'},
+  'v-41':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,grupo:'TORNADO',placas:'JD0441-A'},
+  'v-42':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,grupo:'TORNADO',placas:'JD0442-A'},
+  'V-44':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,grupo:'TORNADO',placas:'HY5743-A'},
+  'V-45':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,grupo:'TORNADO',placas:'HY5744-A'},
+  'v-47':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,grupo:'TORNADO',placas:'JD0447-A'},
+  'L-1':{marca:'Nissan',modelo:'NP300 Frontier',año:2022,grupo:'NP300',placas:'HH-7001-A'},
+  'L-17':{marca:'Nissan',modelo:'NP300 Frontier',año:2023,grupo:'NP300',placas:'HK-0117-A'},
+  'L-27':{marca:'Nissan',modelo:'NP300 Frontier',año:2024,grupo:'NP300',placas:'JD0427-A'},
+  'U-02':{marca:'Nissan',modelo:'NV350 Urvan',año:2022,grupo:'NP300',placas:'HH-7002-A'},
+  'U-05':{marca:'Nissan',modelo:'NP300 Frontier',año:2021,grupo:'NP300',placas:'FH-5005-A'},
+  'U-14':{marca:'Nissan',modelo:'NV350 Urvan',año:2023,grupo:'NP300',placas:'HK-0114-A'},
+  'U-15':{marca:'Nissan',modelo:'NP300 Frontier',año:2022,grupo:'NP300',placas:'HH-7015-A'},
+  'U-20':{marca:'Nissan',modelo:'NP300 Frontier',año:2022,grupo:'NP300',placas:'HH-9020-A'},
+  'U-31':{marca:'Nissan',modelo:'NP300 Frontier',año:2023,grupo:'NP300',placas:'HK-0131-A'},
+  'U-42':{marca:'Nissan',modelo:'NP300 Frontier',año:2024,grupo:'NP300',placas:'JD0442-A'},
+  'U-44':{marca:'Nissan',modelo:'NP300 Frontier',año:2024,grupo:'NP300',placas:'JD0444-A'},
+  'V-22':{marca:'Nissan',modelo:'NP300 Frontier',año:2023,grupo:'NP300',placas:'HK-0122-A'},
+  'V-29':{marca:'Nissan',modelo:'NP300 Frontier',año:2023,grupo:'NP300',placas:'HK-0129-A'},
+  'TP-02':{marca:'Nissan',modelo:'NV350 Urvan',año:2022,grupo:'NP300',placas:'HH-7102-A'},
+  'TP-07':{marca:'Nissan',modelo:'NV350 Urvan',año:2023,grupo:'NP300',placas:'HK-0107-A'},
+  'TP-11':{marca:'Nissan',modelo:'NV350 Urvan',año:2023,grupo:'NP300',placas:'HK-0111-A'},
+  'TP-12':{marca:'Nissan',modelo:'NV350 Urvan',año:2023,grupo:'NP300',placas:'HK-0112-A'},
+  'TP-13':{marca:'Nissan',modelo:'NV350 Urvan',año:2024,grupo:'NP300',placas:'JD0413-A'},
+  'TP-15':{marca:'Nissan',modelo:'NV350 Urvan',año:2024,grupo:'NP300',placas:'JD0415-A'},
+  'TP-16':{marca:'Nissan',modelo:'NV350 Urvan',año:2024,grupo:'NP300',placas:'JD0416-A'},
+  'TP-17':{marca:'Nissan',modelo:'NV350 Urvan',año:2024,grupo:'NP300',placas:'JD0417-A'},
+  'TP-18':{marca:'Nissan',modelo:'NV350 Urvan',año:2024,grupo:'NP300',placas:'JD0418-A'},
+  'TP-19':{marca:'Nissan',modelo:'NV350 Urvan',año:2024,grupo:'NP300',placas:'JD0419-A'},
+  'v-31':{marca:'Volkswagen',modelo:'Saveiro Trendline',año:2025,grupo:'VW',placas:'JD0431-A'},
+  'v-32':{marca:'Volkswagen',modelo:'Saveiro Trendline',año:2025,grupo:'VW',placas:'JD0432-A'},
+  'v-33':{marca:'Volkswagen',modelo:'Robust Trendline',año:2025,grupo:'VW',placas:'JD0433-A'},
+  'TP-20':{marca:'JAC',modelo:'Sunray Pasajeros',año:2025,grupo:'JAC',placas:'04-DTA-09'},
+  'TP-21':{marca:'JAC',modelo:'Sunray Pasajeros',año:2025,grupo:'JAC',placas:'JGX-064-A'},
+  'TP-22':{marca:'JAC',modelo:'Sunray Pasajeros',año:2025,grupo:'JAC',placas:'JRE214-A'},
+  'Tp-23':{marca:'JAC',modelo:'Sunray Pasajeros',año:2025,grupo:'JAC',placas:'JRE381-A'},
+  'C-09':{marca:'Ram',modelo:'4000 Chassis',año:2015,grupo:'RAM4000',placas:'JU-63-353'},
+  'V-07':{marca:'Ram',modelo:'4000 Chassis',año:2024,grupo:'RAM4000',placas:'HU-2331-A'},
+  'V-11':{marca:'Ram',modelo:'4000 Chassis',año:2024,grupo:'RAM4000',placas:'HW-8362-A'},
+  'V-14':{marca:'Ram',modelo:'4000 Chassis',año:2024,grupo:'RAM4000',placas:'HW-8390-A'},
+  'v-20':{marca:'Ram',modelo:'4000 Chassis',año:2014,grupo:'RAM4000',placas:'JT-9521-2'},
+  'V-26':{marca:'Ram',modelo:'4000 Chassis',año:2024,grupo:'RAM4000',placas:'JD-0402-A'},
+};
+
+// Costos estimados por grupo e intervalo (índice 0=10k,1=20k...)
+const COSTOS = {
+  HILUX:    [3850,6200,3850,9800,3850,12500,3850,9800,3850],
+  L200_4N16:[3650,5800,3650,9200,3650,11800,3650,9200,3650],
+  L200_4N15:[3650,5800,3650,9200,3650,11800,3650,9200,3650],
+  L200_4D56:[3650,5800,3650,9200,3650,11800,3650,9200,3650],
+  NP300:    [3950,6400,3950,10200,3950,12800,3950],
+  TORNADO:  [2800,4500,2800,7200,2800,9000,2800],
+  VW:       [2600,4200,2600,6800,2600],
+  JAC:      [3800,6000,3800,9500,3800,12000],
+  RAM4000:  [4200,7100,4200,11500,4200,14000,4200],
+  OTROS:    [2500,4000,2500,6500,2500],
+};
+
+function getCostoEstimado(eco, kmServicio) {
+  const u = DB[eco];
+  if (!u) return 0;
+  const arr = COSTOS[u.grupo] || COSTOS.OTROS;
+  const idx = kmServicio/10000 - 1;
+  return arr[Math.min(Math.max(idx,0), arr.length-1)] || arr[arr.length-1];
+}
+
+function calcProximo(km, kmUltimo) {
+  if (kmUltimo && kmUltimo > 0) return Math.ceil((kmUltimo+1)/10000)*10000;
+  return Math.ceil((km+1)/10000)*10000;
+}
+
+function fmt(n){ return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+function fmtKm(n){ return n.toLocaleString('es-MX')+' KM'; }
+
+// ── DEMO DATA GENERATOR ──────────────────────────────────────────────────
+let DEMO_KM_DATA = null;
+function buildDemoData() {
+  if (DEMO_KM_DATA) return;
+  function sr(seed,min,max){let h=0;for(let i=0;i<seed.length;i++)h=((h<<5)-h+seed.charCodeAt(i))|0;return min+(Math.abs(h)%(max-min+1));}
+  function kmBase(año){const b=[5000,18000,35000,55000,75000,95000,115000,135000,155000];return b[Math.min(2026-año,b.length-1)];}
+  const KM={};
+  Object.entries(DB).forEach(([eco,u])=>{
+    const s=eco, pct=sr(s+'pct',0,99);
+    if(pct<5){KM[eco]={km:null,kmUltimo:null};return;}
+    const base=kmBase(u.año), var_=sr(s+'var',-25,25);
+    let kmA=Math.round(base*(1+var_/100)/100)*100;
+    if(kmA<2000)kmA=2000;
+    let kmU=null;
+    if(pct<20){const v=sr(s+'vc',500,7000);const prox=Math.ceil((kmA-v+1)/10000)*10000;const b=prox-10000;kmU=b>0?b+sr(s+'ul',300,8500):null;}
+    else if(pct<38){const nextM=(Math.floor(kmA/10000)+1)*10000;kmA=nextM-sr(s+'rg',150,950);const b=nextM-10000;kmU=b>0?b+sr(s+'ul',300,8500):null;}
+    else if(pct<63){const nextM=(Math.floor(kmA/10000)+1)*10000;kmA=nextM-sr(s+'rp',1050,2950);const b=nextM-10000;kmU=b>0?b+sr(s+'ul',300,7500):null;}
+    else{const nextM=(Math.floor(kmA/10000)+1)*10000;kmA=nextM-sr(s+'ra',3100,8000);if(kmA<1000)kmA=nextM+sr(s+'af',3100,5000);const b=nextM-10000;kmU=b>0?b+sr(s+'ul',200,6500):null;}
+    KM[eco]={km:kmA,kmUltimo:kmU};
+  });
+  DEMO_KM_DATA=KM;
+}
+
+// ── ESTADO ────────────────────────────────────────────────────────────────
+let kmData = {};
+let demoMode = false;
+
+async function init() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/kilometrajes?select=eco,km_actual,km_ultimo_servicio`, { headers: HEADERS });
+  const rows = await r.json();
+  if (Array.isArray(rows)) rows.forEach(r => {
+    kmData[r.eco] = { km: r.km_actual, kmUltimo: r.km_ultimo_servicio };
+  });
+  recalcular();
+}
+
+function getKmUnidad(eco) {
+  if (demoMode && DEMO_KM_DATA && DEMO_KM_DATA[eco]) return DEMO_KM_DATA[eco];
+  return kmData[eco] || { km: null, kmUltimo: null };
+}
+
+function recalcular() {
+  const kmDia = parseInt(document.getElementById('km-dia').value) || 200;
+  const unidades = [];
+
+  Object.entries(DB).forEach(([eco, u]) => {
+    const d = getKmUnidad(eco);
+    if (!d.km) return;
+    const proximo = calcProximo(d.km, d.kmUltimo);
+    const restante = proximo - d.km;
+    const costo = getCostoEstimado(eco, proximo);
+    const diasEst = restante > 0 ? Math.ceil(restante / kmDia) : 0;
+    let estado, estadoKey;
+    if (restante <= 0)        { estado='VENCIDO'; estadoKey='rojo'; }
+    else if (restante < 1000) { estado='URGENTE'; estadoKey='rojo'; }
+    else if (restante <= 3000){ estado='PRÓXIMO'; estadoKey='amarillo'; }
+    else                      { estado='AL DÍA';  estadoKey='verde'; }
+    unidades.push({ eco, u, km:d.km, proximo, restante, costo, diasEst, estado, estadoKey });
+  });
+
+  // Ordenar por restante ascendente (más urgentes primero)
+  unidades.sort((a,b) => a.restante - b.restante);
+
+  renderResumen(unidades, kmDia);
+  renderPeriodos(unidades, kmDia);
+  renderTabla(unidades);
+}
+
+function renderResumen(unidades, kmDia) {
+  const vencidos  = unidades.filter(u=>u.restante<=0);
+  const urgentes  = unidades.filter(u=>u.restante>0&&u.restante<1000);
+  const proximos  = unidades.filter(u=>u.restante>=1000&&u.restante<=3000);
+  const alDia     = unidades.filter(u=>u.restante>3000);
+  const totalInv  = unidades.reduce((s,u)=>s+u.costo,0);
+  const invUrgente= [...vencidos,...urgentes].reduce((s,u)=>s+u.costo,0);
+
+  document.getElementById('resumen').innerHTML = `
+    <div class="res-card rojo">
+      <div class="res-titulo">🔴 Vencidas + Urgentes</div>
+      <div class="res-num">${vencidos.length+urgentes.length}</div>
+      <div class="res-sub">Requieren servicio inmediato</div>
+      <div class="res-monto">${fmt(invUrgente)}</div>
+    </div>
+    <div class="res-card amarillo">
+      <div class="res-titulo">🟡 Próximas (1-3K KM)</div>
+      <div class="res-num">${proximos.length}</div>
+      <div class="res-sub">≈ ${proximos.length>0?Math.round(proximos.reduce((s,u)=>s+u.diasEst,0)/proximos.length):0} días promedio</div>
+      <div class="res-monto">${fmt(proximos.reduce((s,u)=>s+u.costo,0))}</div>
+    </div>
+    <div class="res-card verde">
+      <div class="res-titulo">🟢 Al día (>3K KM)</div>
+      <div class="res-num">${alDia.length}</div>
+      <div class="res-sub">Sin urgencia inmediata</div>
+      <div class="res-monto">${fmt(alDia.reduce((s,u)=>s+u.costo,0))}</div>
+    </div>
+    <div class="res-card total">
+      <div class="res-titulo">💰 Inversión total proyectada</div>
+      <div class="res-num">${fmt(totalInv)}</div>
+      <div class="res-sub">${unidades.length} unidades con KM registrado</div>
+      <div class="res-monto" style="font-size:12px;color:#888">Promedio ${fmt(Math.round(totalInv/Math.max(unidades.length,1)))} / unidad</div>
+    </div>`;
+}
+
+function renderPeriodos(unidades, kmDia) {
+  const periodos = [
+    { label:'Hoy (vencidas)',    min:-Infinity, max:0,    color:'#e74c3c' },
+    { label:'7 días',            min:0,         max:7,    color:'#f39c12' },
+    { label:'15 días',           min:7,         max:15,   color:'#f39c12' },
+    { label:'30 días',           min:15,        max:30,   color:'#2ecc71' },
+    { label:'60 días',           min:30,        max:60,   color:'#7ec8e3' },
+    { label:'Más de 60 días',    min:60,        max:Infinity, color:'#666' },
+  ];
+
+  let html = '';
+  periodos.forEach(p => {
+    const grupo = unidades.filter(u => u.diasEst > p.min && u.diasEst <= p.max);
+    if (grupo.length === 0) return;
+    const total = grupo.reduce((s,u)=>s+u.costo,0);
+    html += `<div class="periodo-card">
+      <div class="periodo-titulo" style="color:${p.color}">${p.label}</div>
+      <div class="periodo-row"><span class="periodo-label">Unidades</span><span class="periodo-val">${grupo.length}</span></div>
+      <div class="periodo-row"><span class="periodo-label">Inversión estimada</span><span class="periodo-monto">${fmt(total)}</span></div>
+      <div class="periodo-row"><span class="periodo-label">Promedio por unidad</span><span class="periodo-monto">${fmt(Math.round(total/grupo.length))}</span></div>
+    </div>`;
+  });
+  document.getElementById('periodos').innerHTML = html;
+}
+
+function renderTabla(unidades) {
+  let html = '';
+  unidades.forEach(({ eco, u, km, proximo, restante, costo, diasEst, estado, estadoKey }) => {
+    let diasHtml = '';
+    if (restante <= 0) diasHtml = `<span class="dias-chip dias-hoy">HOY</span>`;
+    else if (diasEst <= 7)  diasHtml = `<span class="dias-chip dias-semana">${diasEst} días</span>`;
+    else if (diasEst <= 15) diasHtml = `<span class="dias-chip dias-quincena">${diasEst} días</span>`;
+    else if (diasEst <= 30) diasHtml = `<span class="dias-chip dias-mes">${diasEst} días</span>`;
+    else diasHtml = `<span class="dias-chip dias-futuro">${diasEst} días</span>`;
+
+    const semClass = estadoKey==='rojo'?'s-rojo':estadoKey==='amarillo'?'s-amarillo':'s-verde';
+    const restLabel = restante<=0 ? `${fmtKm(Math.abs(restante))} VENCIDO` : fmtKm(restante);
+    const restColor = estadoKey==='rojo'?'#e74c3c':estadoKey==='amarillo'?'#f39c12':'#2ecc71';
+
+    html += `<tr>
+      <td><span class="eco">${eco}</span></td>
+      <td><div class="modelo">${u.modelo} <span style="color:#555;font-size:10px">${u.año}</span></div></td>
+      <td><span class="km-chip">${fmtKm(km)}</span></td>
+      <td style="color:#c8a951;font-weight:600">${fmtKm(proximo)}</td>
+      <td style="color:${restColor};font-weight:600;font-size:12px">${restLabel}</td>
+      <td>${diasHtml}</td>
+      <td><span class="semaforo ${semClass}">${estado}</span></td>
+      <td class="monto">${fmt(costo)}</td>
+    </tr>`;
+  });
+
+  document.getElementById('tbl-body').innerHTML = html || '<tr><td colspan="8" class="loading-msg">Sin datos</td></tr>';
+}
+
+// ── DEMO MODE ─────────────────────────────────────────────────────────────
+function toggleDemo() {
+  buildDemoData();
+  demoMode = !demoMode;
+  const btn = document.getElementById('btn-demo');
+  const banner = document.getElementById('demo-banner');
+  btn.classList.toggle('activo', demoMode);
+  btn.textContent = demoMode ? '✕ Salir de Demo' : '🎭 Modo Demo';
+  banner.classList.toggle('visible', demoMode);
+  recalcular();
+}
+
+init();
+</script>
+</body>
+</html>
