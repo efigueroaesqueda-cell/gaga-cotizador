@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portal Flotilla GAGA — Henry's Diagnostics</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#1a1a1a;color:#eee;min-height:100vh}
+/* HEADER */
+.hdr{background:#111;border-bottom:3px solid #c8a951;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.hdr-logo{display:flex;align-items:center;gap:12px}
+.hdr-logo svg{width:36px;height:36px}
+.hdr-title{font-size:18px;font-weight:700;color:#c8a951;letter-spacing:.5px}
+.hdr-sub{font-size:12px;color:#aaa;margin-top:2px}
+.hdr-link{font-size:12px;color:#c8a951;text-decoration:none;border:1px solid #c8a951;padding:5px 12px;border-radius:4px}
+.hdr-link:hover{background:#c8a951;color:#111}
+/* SUMMARY CARDS */
+.summary{display:flex;gap:12px;padding:16px 24px;flex-wrap:wrap}
+.card{background:#222;border-radius:8px;padding:14px 20px;min-width:130px;text-align:center;border-top:3px solid #555}
+.card.verde{border-color:#2ecc71}.card.amarillo{border-color:#f39c12}.card.rojo{border-color:#e74c3c}.card.gris{border-color:#666}
+.card-num{font-size:28px;font-weight:700;color:#fff}
+.card.verde .card-num{color:#2ecc71}.card.amarillo .card-num{color:#f39c12}.card.rojo .card-num{color:#e74c3c}.card.gris .card-num{color:#888}
+.card-lbl{font-size:11px;color:#aaa;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+/* TOOLBAR */
+.toolbar{padding:0 24px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar input[type=text]{background:#2a2a2a;border:1px solid #444;color:#eee;padding:7px 12px;border-radius:6px;font-size:13px;width:220px}
+.toolbar input[type=text]::placeholder{color:#666}
+.btn-save{background:#c8a951;color:#111;border:none;padding:8px 20px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;margin-left:auto}
+.btn-save:hover{background:#e0bf60}
+.btn-save:disabled{background:#555;color:#888;cursor:not-allowed}
+.filtros{display:flex;gap:6px}
+.f-btn{background:#2a2a2a;border:1px solid #444;color:#ccc;padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer}
+.f-btn.activo{background:#c8a951;color:#111;border-color:#c8a951;font-weight:600}
+/* TABLE */
+.tbl-wrap{padding:0 24px 40px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:#c8a951;color:#111}
+thead th{padding:10px 12px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+tbody tr{border-bottom:1px solid #2a2a2a;cursor:pointer;transition:background .15s}
+tbody tr:hover{background:#252525}
+tbody tr.pendiente{background:#1e1e10}
+td{padding:9px 12px;vertical-align:middle}
+.eco{font-weight:700;color:#c8a951;font-size:13px}
+.modelo{font-size:12px;color:#ddd}
+.placa{font-size:11px;color:#888;font-family:monospace}
+.km-input{background:#2a2a2a;border:1px solid #444;color:#eee;padding:5px 8px;border-radius:4px;font-size:13px;width:90px;text-align:right}
+.km-input:focus{outline:none;border-color:#c8a951}
+.km-input.changed{border-color:#f39c12;background:#1e1a0a}
+.proximo{font-size:12px;color:#aaa}
+.restante{font-size:12px;font-weight:600}
+/* SEMÁFORO */
+.semaforo{display:inline-block;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.s-verde{background:#1a4a2a;color:#2ecc71;border:1px solid #2ecc71}
+.s-amarillo{background:#3a2a00;color:#f39c12;border:1px solid #f39c12}
+.s-rojo{background:#3a0a0a;color:#e74c3c;border:1px solid #e74c3c;animation:pulse 1.5s infinite}
+.s-gris{background:#222;color:#888;border:1px solid #555}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.btn-cot{background:#1a2a3a;border:1px solid #4a7a9b;color:#7ec8e3;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;white-space:nowrap}
+.btn-cot:hover{background:#4a7a9b;color:#fff}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.visible{display:flex}
+.modal{background:#1e1e1e;border:1px solid #333;border-radius:10px;width:min(680px,96vw);max-height:90vh;overflow-y:auto}
+.modal-hdr{background:#111;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #c8a951;border-radius:10px 10px 0 0}
+.modal-hdr-title{font-size:16px;font-weight:700;color:#c8a951}
+.modal-close{background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;line-height:1}
+.modal-close:hover{color:#fff}
+.modal-body{padding:20px}
+.modal-unidad{background:#252525;border-radius:6px;padding:12px 16px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:12px}
+.mu-lbl{color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+.mu-val{color:#eee;font-weight:600}
+.modal-km-hdr{font-size:13px;font-weight:700;color:#c8a951;margin-bottom:10px}
+.modal-table{width:100%;border-collapse:collapse;font-size:12px}
+.modal-table th{background:#2a2a2a;color:#aaa;padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase}
+.modal-table td{padding:8px 10px;border-bottom:1px solid #2a2a2a;vertical-align:top}
+.modal-table .badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;margin-bottom:3px}
+.badge-ref{background:#1a2a4a;color:#5b9bd5;border:1px solid #5b9bd5}
+.badge-mo{background:#2a1a00;color:#e67e22;border:1px solid #e67e22}
+.badge-cor{background:#1a3a1a;color:#27ae60;border:1px solid #27ae60}
+.modal-total{background:#c8a951;color:#111;font-weight:700;padding:10px 16px;border-radius:6px;display:flex;justify-content:space-between;margin-top:12px;font-size:15px}
+.gratis{color:#27ae60;font-style:italic}
+.loading-msg{text-align:center;padding:30px;color:#888;font-style:italic}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#2ecc71;color:#111;padding:12px 20px;border-radius:8px;font-weight:700;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.error{background:#e74c3c;color:#fff}
+/* GRUPO HEADER */
+.grupo-hdr td{background:#1e1e1e;color:#c8a951;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;border-top:2px solid #333}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-logo">
+    <svg viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="6" fill="#c8a951"/><text x="20" y="27" text-anchor="middle" font-size="18" fill="#111" font-weight="bold">H</text></svg>
+    <div>
+      <div class="hdr-title">Henry's Diagnostics — Portal Flotilla GAGA</div>
+      <div class="hdr-sub">Captura de KM · Proyección de servicio · Control de flotilla</div>
+    </div>
+  </div>
+  <a href="index.html" class="hdr-link">↩ Cotizador</a>
+</div>
+
+<!-- SUMMARY CARDS -->
+<div class="summary" id="summary">
+  <div class="card rojo"><div class="card-num" id="cnt-rojo">—</div><div class="card-lbl">🔴 Urgente (&lt;1,000 KM)</div></div>
+  <div class="card amarillo"><div class="card-num" id="cnt-amarillo">—</div><div class="card-lbl">🟡 Próximo (1-3k KM)</div></div>
+  <div class="card verde"><div class="card-num" id="cnt-verde">—</div><div class="card-lbl">🟢 Al día (&gt;3,000 KM)</div></div>
+  <div class="card gris"><div class="card-num" id="cnt-gris">—</div><div class="card-lbl">⚫ Sin registro</div></div>
+  <div class="card" style="border-color:#c8a951"><div class="card-num" style="color:#c8a951" id="cnt-total">—</div><div class="card-lbl">Total unidades</div></div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <input type="text" id="buscar" placeholder="Buscar por eco, modelo o placa…">
+  <div class="filtros">
+    <button class="f-btn activo" onclick="filtrar('todos',this)">Todos</button>
+    <button class="f-btn" onclick="filtrar('rojo',this)">🔴 Urgente</button>
+    <button class="f-btn" onclick="filtrar('amarillo',this)">🟡 Próximo</button>
+    <button class="f-btn" onclick="filtrar('verde',this)">🟢 Al día</button>
+    <button class="f-btn" onclick="filtrar('gris',this)">⚫ Sin registro</button>
+  </div>
+  <button class="btn-save" id="btn-guardar" onclick="guardarTodos()" disabled>💾 Guardar cambios</button>
+</div>
+
+<!-- TABLA -->
+<div class="tbl-wrap">
+  <table id="tbl">
+    <thead>
+      <tr>
+        <th>Eco</th>
+        <th>Modelo / Placa</th>
+        <th>KM Actual</th>
+        <th>Próximo Servicio</th>
+        <th>KM Restantes</th>
+        <th>Estado</th>
+        <th>Cotización</th>
+      </tr>
+    </thead>
+    <tbody id="tbl-body">
+      <tr><td colspan="7" class="loading-msg">Cargando flotilla…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- MODAL COTIZACIÓN -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-hdr-title" id="modal-title">Cotización</span>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <div class="loading-msg">Cargando…</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────
+const SUPABASE_URL      = 'https://bgpugtgjbfseqwwcwpyd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJncHVndGdqYmZzZXF3d2N3cHlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjM4MjEsImV4cCI6MjA5ODEzOTgyMX0.iYp-y00qYWv9uvJX73eAASeKy5qbonXN3Jbwd4qRxPM';
+const HEADERS = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' };
+
+// ── BASE DE DATOS DE UNIDADES ─────────────────────────────────────────────
+const DB = {
+  'V-01':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HW-8359-A',grupo:'HILUX'},
+  'V-02':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HW-8358-A',grupo:'HILUX'},
+  'V-05':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HU2326-A',grupo:'HILUX'},
+  'V-06':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HU2327-A',grupo:'HILUX'},
+  'V-09':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HW-8359-A',grupo:'HILUX'},
+  'V-10':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HW-8370-A',grupo:'HILUX'},
+  'V-12':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HW-8372-A',grupo:'HILUX'},
+  'V-13':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HW-8392-A',grupo:'HILUX'},
+  'V-15':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HW-8398-A',grupo:'HILUX'},
+  'V-16':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HW-8397-A',grupo:'HILUX'},
+  'V-17':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'HW-8362-A',grupo:'HILUX'},
+  'V-18':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,motor:'2.8L Diesel 1GD-FTV',placas:'HY5703-A',grupo:'HILUX'},
+  'V-24':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,motor:'2.8L Diesel 1GD-FTV',placas:'HY5746-A',grupo:'HILUX'},
+  'V-25':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,motor:'2.8L Diesel 1GD-FTV',placas:'HY5745-A',grupo:'HILUX'},
+  'V-30':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,motor:'2.8L Diesel 1GD-FTV',placas:'JD0429-A',grupo:'HILUX'},
+  'U-10':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'FH0342-A',grupo:'HILUX'},
+  'U-18':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2019,motor:'2.8L Diesel 1GD-FTV',placas:'FG-8620-A',grupo:'HILUX'},
+  'U-19':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'FH0343-A',grupo:'HILUX'},
+  'U-39':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2021,motor:'2.8L Diesel 1GD-FTV',placas:'FG-9487-A',grupo:'HILUX'},
+  'U-41':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2018,motor:'2.8L Diesel 1GD-FTV',placas:'FJ-0730-A',grupo:'HILUX'},
+  'U-48':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'JY-48-107',grupo:'HILUX'},
+  'U-49':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2024,motor:'2.8L Diesel 1GD-FTV',placas:'JY-48-106',grupo:'HILUX'},
+  'U-50':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2021,motor:'2.8L Diesel 1GD-FTV',placas:'JY-12-885',grupo:'HILUX'},
+  'v-34':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,motor:'2.8L Diesel 1GD-FTV',placas:'FJ4339-A',grupo:'HILUX'},
+  'v-43':{marca:'Toyota',modelo:'Hilux SRV 4x4',año:2025,motor:'2.8L Diesel 1GD-FTV',placas:'FJ-6189-A',grupo:'HILUX'},
+  'TP-14':{marca:'Toyota',modelo:'Hiace Commuter',año:2022,motor:'2.8L Diesel 1GD-FTV',placas:'HUU410-A',grupo:'HILUX'},
+  'L-2':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'HY5701-A',grupo:'L200_4N16'},
+  'L-3':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'HY5702-A',grupo:'L200_4N16'},
+  'L-4':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'HY5703-A',grupo:'L200_4N16'},
+  'L-7':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'HY5706-A',grupo:'L200_4N16'},
+  'L-8':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'HY5707-A',grupo:'L200_4N16'},
+  'L-10':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'HY5709-A',grupo:'L200_4N16'},
+  'L-11':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'HY5710-A',grupo:'L200_4N16'},
+  'L-12':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'HY5711-A',grupo:'L200_4N16'},
+  'L-13':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'HY5712-A',grupo:'L200_4N16'},
+  'L-24':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2026,motor:'2.4L Diesel 4N16',placas:'JD0428-A',grupo:'L200_4N16'},
+  'L-25':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2026,motor:'2.4L Diesel 4N16',placas:'JD0430-A',grupo:'L200_4N16'},
+  'L-30':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2026,motor:'2.4L Diesel 4N16',placas:'JF0301-A',grupo:'L200_4N16'},
+  'V-19':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'HY5718-A',grupo:'L200_4N16'},
+  'v-35':{marca:'Mitsubishi',modelo:'L200 Rodeo Sport 4x4',año:2025,motor:'2.4L Diesel 4N16',placas:'FJ5001-A',grupo:'L200_4N16'},
+  'U-21':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,motor:'2.4L Diesel 4N15',placas:'HH-9001-A',grupo:'L200_4N15'},
+  'U-22':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,motor:'2.4L Diesel 4N15',placas:'HH-9002-A',grupo:'L200_4N15'},
+  'U-27':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2023,motor:'2.4L Diesel 4N15',placas:'HK-0101-A',grupo:'L200_4N15'},
+  'U-30':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2023,motor:'2.4L Diesel 4N15',placas:'HK-0104-A',grupo:'L200_4N15'},
+  'U-32':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,motor:'2.4L Diesel 4N15',placas:'HH-9006-A',grupo:'L200_4N15'},
+  'U-33':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,motor:'2.4L Diesel 4N15',placas:'HH-9007-A',grupo:'L200_4N15'},
+  'U-40':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2023,motor:'2.4L Diesel 4N15',placas:'HK-0114-A',grupo:'L200_4N15'},
+  'U-46':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,motor:'2.4L Diesel 4N15',placas:'HH-9020-A',grupo:'L200_4N15'},
+  'U-47':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2022,motor:'2.4L Diesel 4N15',placas:'HH-9021-A',grupo:'L200_4N15'},
+  'U-16':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2021,motor:'2.4L Diesel 4D56',placas:'FH-5016-A',grupo:'L200_4D56'},
+  'U-34':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2021,motor:'2.4L Diesel 4D56',placas:'FH-5034-A',grupo:'L200_4D56'},
+  'U-38':{marca:'Mitsubishi',modelo:'L200 GLS 4x4',año:2021,motor:'2.4L Diesel 4D56',placas:'FH-5038-A',grupo:'L200_4D56'},
+  'L-5':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,motor:'1.5L Gasolina',placas:'HY5704-A',grupo:'TORNADO'},
+  'L-6':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,motor:'1.5L Gasolina',placas:'HY5705-A',grupo:'TORNADO'},
+  'L-14':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,motor:'1.5L Gasolina',placas:'HY5713-A',grupo:'TORNADO'},
+  'L-15':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,motor:'1.5L Gasolina',placas:'HY5714-A',grupo:'TORNADO'},
+  'L-16':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,motor:'1.5L Gasolina',placas:'HY5715-A',grupo:'TORNADO'},
+  'L-21':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,motor:'1.5L Gasolina',placas:'JD0421-A',grupo:'TORNADO'},
+  'L-22':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,motor:'1.5L Gasolina',placas:'JD0422-A',grupo:'TORNADO'},
+  'L-23':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,motor:'1.5L Gasolina',placas:'JD0423-A',grupo:'TORNADO'},
+  'L-29':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,motor:'1.5L Gasolina',placas:'JF0201-A',grupo:'TORNADO'},
+  'V-37':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,motor:'1.5L Gasolina',placas:'HY5736-A',grupo:'TORNADO'},
+  'V-38':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,motor:'1.5L Gasolina',placas:'HY5737-A',grupo:'TORNADO'},
+  'v-41':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,motor:'1.5L Gasolina',placas:'JD0441-A',grupo:'TORNADO'},
+  'v-42':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,motor:'1.5L Gasolina',placas:'JD0442-A',grupo:'TORNADO'},
+  'V-44':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,motor:'1.5L Gasolina',placas:'HY5743-A',grupo:'TORNADO'},
+  'V-45':{marca:'Chevrolet',modelo:'Tornado LS',año:2025,motor:'1.5L Gasolina',placas:'HY5744-A',grupo:'TORNADO'},
+  'v-47':{marca:'Chevrolet',modelo:'Tornado LS',año:2026,motor:'1.5L Gasolina',placas:'JD0447-A',grupo:'TORNADO'},
+  'L-1':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2022,motor:'2.5L Diesel YD25DDTi',placas:'HH-7001-A',grupo:'NP300'},
+  'L-17':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2023,motor:'2.5L Diesel YD25DDTi',placas:'HK-0117-A',grupo:'NP300'},
+  'L-27':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2024,motor:'2.5L Diesel YD25DDTi',placas:'JD0427-A',grupo:'NP300'},
+  'U-02':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2022,motor:'2.5L Diesel YD25DDTi',placas:'HH-7002-A',grupo:'NP300'},
+  'U-05':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2021,motor:'2.5L Diesel YD25DDTi',placas:'FH-5005-A',grupo:'NP300'},
+  'U-14':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2023,motor:'2.5L Diesel YD25DDTi',placas:'HK-0114-A',grupo:'NP300'},
+  'U-15':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2022,motor:'2.5L Diesel YD25DDTi',placas:'HH-7015-A',grupo:'NP300'},
+  'U-20':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2022,motor:'2.5L Diesel YD25DDTi',placas:'HH-9020-A',grupo:'NP300'},
+  'U-31':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2023,motor:'2.5L Diesel YD25DDTi',placas:'HK-0131-A',grupo:'NP300'},
+  'U-42':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2024,motor:'2.5L Diesel YD25DDTi',placas:'JD0442-A',grupo:'NP300'},
+  'U-44':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2024,motor:'2.5L Diesel YD25DDTi',placas:'JD0444-A',grupo:'NP300'},
+  'V-22':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2023,motor:'2.5L Diesel YD25DDTi',placas:'HK-0122-A',grupo:'NP300'},
+  'V-29':{marca:'Nissan',modelo:'NP300 Frontier D/C',año:2023,motor:'2.5L Diesel YD25DDTi',placas:'HK-0129-A',grupo:'NP300'},
+  'TP-02':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2022,motor:'2.5L Diesel YD25DDTi',placas:'HH-7102-A',grupo:'NP300'},
+  'TP-07':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2023,motor:'2.5L Diesel YD25DDTi',placas:'HK-0107-A',grupo:'NP300'},
+  'TP-11':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2023,motor:'2.5L Diesel YD25DDTi',placas:'HK-0111-A',grupo:'NP300'},
+  'TP-12':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2023,motor:'2.5L Diesel YD25DDTi',placas:'HK-0112-A',grupo:'NP300'},
+  'TP-13':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2024,motor:'2.5L Diesel YD25DDTi',placas:'JD0413-A',grupo:'NP300'},
+  'TP-15':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2024,motor:'2.5L Diesel YD25DDTi',placas:'JD0415-A',grupo:'NP300'},
+  'TP-16':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2024,motor:'2.5L Diesel YD25DDTi',placas:'JD0416-A',grupo:'NP300'},
+  'TP-17':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2024,motor:'2.5L Diesel YD25DDTi',placas:'JD0417-A',grupo:'NP300'},
+  'TP-18':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2024,motor:'2.5L Diesel YD25DDTi',placas:'JD0418-A',grupo:'NP300'},
+  'TP-19':{marca:'Nissan',modelo:'NV350 Urvan Diesel',año:2024,motor:'2.5L Diesel YD25DDTi',placas:'JD0419-A',grupo:'NP300'},
+  'v-31':{marca:'Volkswagen',modelo:'Saveiro Trendline',año:2025,motor:'1.6L Gasolina EA111',placas:'JD0431-A',grupo:'VW'},
+  'v-32':{marca:'Volkswagen',modelo:'Saveiro Trendline',año:2025,motor:'1.6L Gasolina EA111',placas:'JD0432-A',grupo:'VW'},
+  'v-33':{marca:'Volkswagen',modelo:'Robust Trendline',año:2025,motor:'1.6L Gasolina EA111',placas:'JD0433-A',grupo:'VW'},
+  'TP-20':{marca:'JAC',modelo:'Sunray Pasajeros',año:2025,motor:'2.0L Turbo Diesel CM4D20',placas:'04-DTA-09',grupo:'JAC'},
+  'TP-21':{marca:'JAC',modelo:'Sunray Pasajeros',año:2025,motor:'2.0L Turbo Diesel CM4D20',placas:'JGX-064-A',grupo:'JAC'},
+  'TP-22':{marca:'JAC',modelo:'Sunray Pasajeros',año:2025,motor:'2.0L Turbo Diesel CM4D20',placas:'JRE214-A',grupo:'JAC'},
+  'Tp-23':{marca:'JAC',modelo:'Sunray Pasajeros',año:2025,motor:'2.0L Turbo Diesel CM4D20',placas:'JRE381-A',grupo:'JAC'},
+  'C-09':{marca:'Ram',modelo:'4000 Chassis',año:2015,motor:'5.7L Gasolina HEMI V8',placas:'JU-63-353',grupo:'RAM4000'},
+  'V-07':{marca:'Ram',modelo:'4000 Chassis',año:2024,motor:'5.7L Gasolina HEMI V8',placas:'HU-2331-A',grupo:'RAM4000'},
+  'V-11':{marca:'Ram',modelo:'4000 Chassis',año:2024,motor:'5.7L Gasolina HEMI V8',placas:'HW-8362-A',grupo:'RAM4000'},
+  'V-14':{marca:'Ram',modelo:'4000 Chassis',año:2024,motor:'5.7L Gasolina HEMI V8',placas:'HW-8390-A',grupo:'RAM4000'},
+  'v-20':{marca:'Ram',modelo:'4000 Chassis',año:2014,motor:'5.7L Gasolina HEMI V8',placas:'JT-9521-2',grupo:'RAM4000'},
+  'V-26':{marca:'Ram',modelo:'4000 Chassis',año:2024,motor:'5.7L Gasolina HEMI V8',placas:'JD-0402-A',grupo:'RAM4000'},
+  'Honda Negro':{marca:'Honda',modelo:'Accord EX-L',año:2010,motor:'3.5L V6 Gasolina',placas:'—',grupo:'HONDA_NEGRO'},
+  'L-9':{marca:'Chevrolet',modelo:'Tahoe Premier',año:2025,motor:'5.3L V8 Gasolina',placas:'—',grupo:'L_9'},
+  'Tahoe 2021':{marca:'Chevrolet',modelo:'Tahoe LTZ',año:2021,motor:'5.3L V8 Gasolina',placas:'—',grupo:'TAHOE_2021'},
+  'L-19':{marca:'Ford',modelo:'F-150 Raptor',año:2025,motor:'3.5L EcoBoost V6',placas:'—',grupo:'L_19'},
+  'L-20':{marca:'Ford',modelo:'F-150 Tremor',año:2025,motor:'3.5L EcoBoost V6',placas:'—',grupo:'L_20'},
+  'U-13':{marca:'Toyota',modelo:'Tacoma TRD Sport',año:2022,motor:'3.5L V6 Gasolina',placas:'—',grupo:'U_13'},
+  'U-35':{marca:'Toyota',modelo:'Tacoma TRD Sport',año:2015,motor:'4.0L V6 Gasolina',placas:'—',grupo:'U_35'},
+  'U-23':{marca:'Toyota',modelo:'Tacoma PreRunner',año:1999,motor:'2.7L Gasolina',placas:'—',grupo:'U_23'},
+  'u-24':{marca:'Toyota',modelo:'Tacoma/Pickup',año:1991,motor:'2.4L Gasolina',placas:'—',grupo:'U_24'},
+  'U-03':{marca:'Toyota',modelo:'Land Cruiser FJ80',año:1990,motor:'4.0L 6 Cil. Gasolina',placas:'—',grupo:'U_03'},
+  'U-45':{marca:'Toyota',modelo:'Sequoia SR5',año:2008,motor:'4.7L V8 Gasolina',placas:'—',grupo:'U_45'},
+  'v-39':{marca:'Toyota',modelo:'4Runner TRD Sport',año:2025,motor:'4.0L V6 Gasolina',placas:'—',grupo:'V_39'},
+  'u-07':{marca:'Nissan',modelo:'Frontier D22',año:2000,motor:'2.4L Gasolina',placas:'—',grupo:'U_07'},
+  'U-36':{marca:'Nissan',modelo:'King Cab D21',año:1989,motor:'2.4L Gasolina',placas:'—',grupo:'U_36'},
+  'V-08':{marca:'Nissan',modelo:'Versa Advance',año:2021,motor:'1.6L Gasolina',placas:'—',grupo:'V_08'},
+  'V-23':{marca:'Nissan',modelo:'X-Trail Advance',año:2021,motor:'2.5L Gasolina',placas:'—',grupo:'V_23'},
+  'U-25':{marca:'Kia',modelo:'Rio LX',año:2020,motor:'1.6L Gasolina',placas:'—',grupo:'U_25'},
+  'V-49':{marca:'Kia',modelo:'Forte LX',año:2024,motor:'2.0L Gasolina',placas:'—',grupo:'V_49'},
+  'u-17':{marca:'Hyundai',modelo:'i10 GLS',año:2011,motor:'1.1L Gasolina',placas:'—',grupo:'U_17'},
+  'Altima':{marca:'Nissan',modelo:'Altima SL',año:2013,motor:'2.5L Gasolina',placas:'—',grupo:'ALTIMA'},
+  'V-28':{marca:'Ram',modelo:'ProMaster 2500',año:2020,motor:'3.6L V6 Gasolina',placas:'—',grupo:'V_28'},
+};
+
+// ── TIPO VEHICULO ─────────────────────────────────────────────────────────
+function getTipoVehiculo(v) {
+  const g = v.grupo, m = v.modelo || '';
+  if (g==='NP300') return (m.includes('NV350')||m.includes('Urvan')) ? 'Nissan Urvan NV350 Diesel' : 'Nissan NP300 Diesel';
+  if (g==='VW')    return m.includes('Robust') ? 'VW Robust Gasolina' : 'VW Saveiro Gasolina';
+  if (g==='HILUX' && (m.includes('Hiace')||m.includes('Commuter'))) return 'Toyota Hiace Commuter Diesel';
+  const MAP = {
+    HILUX:'Toyota Hilux SRV Diesel',L200_4N16:'Mitsubishi L200 Diesel',L200_4N15:'Mitsubishi L200 Diesel',
+    L200_4D56:'Mitsubishi L200 Diesel',JAC:'JAC Sunray Diesel',TORNADO:'Chevrolet Tornado Gasolina',
+    RAM4000:'Ram 4000 Gasolina',V_28:'Ram ProMaster 2500 Gasolina',V_39:'Toyota 4Runner TRD Sport Gasolina',
+    L_19:'Ford F-150 Raptor Gasolina',L_20:'Ford F-150 Tremor Gasolina',U_13:'Toyota Tacoma TRD Sport Gasolina',
+    U_35:'Toyota Tacoma TRD Sport Gasolina',U_23:'Toyota Tacoma PreRunner Gasolina',U_24:'Toyota Tacoma Pickup Gasolina',
+    U_03:'Toyota Land Cruiser FJ80 Gasolina',U_45:'Toyota Sequoia SR5 Gasolina',TAHOE_2021:'Chevrolet Tahoe LTZ Gasolina',
+    L_9:'Chevrolet Tahoe Premier Gasolina',U_07:'Nissan Frontier D22 Gasolina',U_36:'Nissan King Cab D21 Gasolina',
+    ALTIMA:'Nissan Altima SL Gasolina',V_08:'Nissan Versa Advance Gasolina',V_23:'Nissan X-Trail Advance Gasolina',
+    V_49:'Kia Forte LX Gasolina',U_25:'Kia Rio LX Gasolina',HONDA_NEGRO:'Honda Accord EX-L Gasolina',U_17:'Hyundai i10 GLS Gasolina',
+  };
+  return MAP[g] || null;
+}
+
+// ── SEMÁFORO ──────────────────────────────────────────────────────────────
+function calcSemaforo(kmActual) {
+  const proximo = Math.ceil((kmActual + 1) / 10000) * 10000;
+  const restante = proximo - kmActual;
+  let clase, label;
+  if (restante < 1000)       { clase='s-rojo';     label='URGENTE'; }
+  else if (restante < 3000)  { clase='s-amarillo';  label='Próximo'; }
+  else                       { clase='s-verde';     label='Al día';  }
+  return { proximo, restante, clase, label };
+}
+
+function fmt(n) { return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtKm(n) { return n.toLocaleString('es-MX')+' KM'; }
+
+// ── ESTADO GLOBAL ─────────────────────────────────────────────────────────
+let kmData = {};       // eco → km_actual guardado
+let kmEdits = {};      // eco → km editado pero no guardado
+let filtroCurrent = 'todos';
+let _preciosCache = {};
+
+// ── CARGA INICIAL ─────────────────────────────────────────────────────────
+async function init() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/kilometrajes?select=eco,km_actual,fecha_captura`, { headers: HEADERS });
+  const rows = await r.json();
+  if (Array.isArray(rows)) rows.forEach(r => { kmData[r.eco] = { km: r.km_actual, fecha: r.fecha_captura }; });
+  renderTabla();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+const GRUPOS_LABEL = {
+  HILUX:'Toyota Hilux / Hiace',L200_4N16:'Mitsubishi L200 (4N16)',L200_4N15:'Mitsubishi L200 (4N15)',
+  L200_4D56:'Mitsubishi L200 (4D56)',TORNADO:'Chevrolet Tornado',NP300:'Nissan NP300 Frontier / Urvan',
+  VW:'Volkswagen Saveiro / Robust',JAC:'JAC Sunray',RAM4000:'Ram 4000',
+  HONDA_NEGRO:'Honda Accord',L_9:'Chevrolet Tahoe Premier',TAHOE_2021:'Chevrolet Tahoe LTZ',
+  L_19:'Ford F-150 Raptor',L_20:'Ford F-150 Tremor',U_13:'Toyota Tacoma TRD (2022)',
+  U_35:'Toyota Tacoma TRD (2015)',U_23:'Toyota Tacoma PreRunner',U_24:'Toyota Tacoma Pickup',
+  U_03:'Toyota Land Cruiser FJ80',U_45:'Toyota Sequoia SR5',V_39:'Toyota 4Runner TRD',
+  U_07:'Nissan Frontier D22',U_36:'Nissan King Cab D21',ALTIMA:'Nissan Altima',
+  V_08:'Nissan Versa',V_23:'Nissan X-Trail',U_25:'Kia Rio',V_49:'Kia Forte',
+  U_17:'Hyundai i10',V_28:'Ram ProMaster',
+};
+
+function renderTabla() {
+  const buscar = document.getElementById('buscar').value.toLowerCase();
+  const tbody = document.getElementById('tbl-body');
+  let html = '';
+  let cntRojo=0, cntAmarillo=0, cntVerde=0, cntGris=0, cntTotal=0;
+  let grupoActual = null;
+
+  Object.entries(DB).forEach(([eco, u]) => {
+    const km = kmEdits[eco] !== undefined ? kmEdits[eco] : (kmData[eco]?.km ?? null);
+    const sinRegistro = km === null;
+    let estadoKey = 'gris', sem = null;
+    if (!sinRegistro) { sem = calcSemaforo(km); estadoKey = sem.clase.replace('s-',''); }
+
+    // Filtro estado
+    if (filtroCurrent !== 'todos' && estadoKey !== filtroCurrent) return;
+    // Filtro búsqueda
+    const txt = `${eco} ${u.modelo} ${u.placas}`.toLowerCase();
+    if (buscar && !txt.includes(buscar)) return;
+
+    // Contador
+    cntTotal++;
+    if (sinRegistro) cntGris++;
+    else if (estadoKey==='rojo') cntRojo++;
+    else if (estadoKey==='amarillo') cntAmarillo++;
+    else cntVerde++;
+
+    // Header de grupo
+    if (u.grupo !== grupoActual) {
+      grupoActual = u.grupo;
+      html += `<tr class="grupo-hdr"><td colspan="7">${GRUPOS_LABEL[u.grupo]||u.grupo}</td></tr>`;
+    }
+
+    const kmVal = km !== null ? km : '';
+    const pendiente = kmEdits[eco] !== undefined ? ' pendiente' : '';
+    const changed = kmEdits[eco] !== undefined ? ' changed' : '';
+
+    const semHtml = sinRegistro
+      ? '<span class="semaforo s-gris">Sin registro</span>'
+      : `<span class="semaforo ${sem.clase}">${sem.label}</span>`;
+    const proxHtml = sinRegistro ? '<span style="color:#555">—</span>' : fmtKm(sem.proximo);
+    const restHtml = sinRegistro ? '<span style="color:#555">—</span>'
+      : `<span class="restante" style="color:${estadoKey==='rojo'?'#e74c3c':estadoKey==='amarillo'?'#f39c12':'#2ecc71'}">${fmtKm(sem.restante)}</span>`;
+
+    html += `<tr class="${pendiente}" data-eco="${eco}">
+      <td><span class="eco">${eco}</span></td>
+      <td><div class="modelo">${u.modelo} <span style="color:#666;font-size:10px">${u.año}</span></div><div class="placa">${u.placas}</div></td>
+      <td><input class="km-input${changed}" type="number" min="0" step="1000" value="${kmVal}" placeholder="0" data-eco="${eco}" onchange="onKmChange('${eco}',this.value)" oninput="onKmChange('${eco}',this.value)"></td>
+      <td>${proxHtml}</td>
+      <td>${restHtml}</td>
+      <td>${semHtml}</td>
+      <td><button class="btn-cot" onclick="verCotizacion('${eco}',event)">Ver cotización →</button></td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html || '<tr><td colspan="7" style="text-align:center;padding:30px;color:#666">Sin resultados</td></tr>';
+  document.getElementById('cnt-rojo').textContent = cntRojo;
+  document.getElementById('cnt-amarillo').textContent = cntAmarillo;
+  document.getElementById('cnt-verde').textContent = cntVerde;
+  document.getElementById('cnt-gris').textContent = cntGris;
+  document.getElementById('cnt-total').textContent = cntTotal;
+}
+
+// ── KM CHANGE ────────────────────────────────────────────────────────────
+function onKmChange(eco, val) {
+  const n = parseInt(val);
+  if (!isNaN(n) && n >= 0) {
+    kmEdits[eco] = n;
+  } else {
+    delete kmEdits[eco];
+  }
+  document.getElementById('btn-guardar').disabled = Object.keys(kmEdits).length === 0;
+  renderTabla();
+}
+
+// ── GUARDAR ──────────────────────────────────────────────────────────────
+async function guardarTodos() {
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true;
+  btn.textContent = 'Guardando…';
+
+  const entries = Object.entries(kmEdits);
+  let ok = 0, err = 0;
+
+  for (const [eco, km] of entries) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/kilometrajes`, {
+      method: 'POST',
+      headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify({ eco, km_actual: km, fecha_captura: new Date().toISOString() })
+    });
+    if (r.ok || r.status === 201 || r.status === 200) {
+      kmData[eco] = { km, fecha: new Date().toISOString() };
+      ok++;
+    } else { err++; }
+  }
+
+  kmEdits = {};
+  btn.textContent = '💾 Guardar cambios';
+  renderTabla();
+
+  if (err === 0) toast(`✅ ${ok} unidad${ok!==1?'es':''} guardada${ok!==1?'s':''}`, false);
+  else toast(`⚠️ ${ok} OK, ${err} error(es)`, true);
+}
+
+// ── FILTROS ───────────────────────────────────────────────────────────────
+function filtrar(tipo, btn) {
+  filtroCurrent = tipo;
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('activo'));
+  btn.classList.add('activo');
+  renderTabla();
+}
+
+document.getElementById('buscar').addEventListener('input', renderTabla);
+
+// ── COTIZACIÓN MODAL ──────────────────────────────────────────────────────
+async function verCotizacion(eco, event) {
+  event.stopPropagation();
+  const u = DB[eco];
+  const km = kmEdits[eco] !== undefined ? kmEdits[eco] : (kmData[eco]?.km ?? null);
+  const tv = getTipoVehiculo(u);
+
+  document.getElementById('modal-title').textContent = `Cotización — ${eco} (${u.modelo})`;
+  document.getElementById('modal-body').innerHTML = '<div class="loading-msg">Cargando precios…</div>';
+  document.getElementById('modal').classList.add('visible');
+
+  if (!tv) {
+    document.getElementById('modal-body').innerHTML = '<div class="loading-msg" style="color:#e74c3c">Sin datos de precio para este vehículo en Supabase.</div>';
+    return;
+  }
+
+  if (km === null) {
+    document.getElementById('modal-body').innerHTML = '<div class="loading-msg" style="color:#f39c12">Captura el KM actual de esta unidad para ver la cotización del próximo servicio.</div>';
+    return;
+  }
+
+  const sem = calcSemaforo(km);
+  const kmServicio = sem.proximo;
+
+  try {
+    if (!_preciosCache[tv]) {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/precios_gaga?tipo_vehiculo=eq.${encodeURIComponent(tv)}&order=km_intervalo.asc`, { headers: HEADERS });
+      _preciosCache[tv] = await r.json();
+    }
+    const rows = _preciosCache[tv].filter(r => r.km_intervalo === kmServicio);
+    const total = rows.reduce((s,r) => s + (r.total||0), 0);
+
+    const fecha = kmData[eco]?.fecha ? new Date(kmData[eco].fecha).toLocaleDateString('es-MX') : 'No registrada';
+
+    let itemsHtml = rows.map(item => {
+      const tipo = item.tipo||'';
+      const bdg = tipo==='Refacción' ? '<span class="badge badge-ref">Refacción</span>' :
+                  tipo==='Mano de obra' ? '<span class="badge badge-mo">Mano de obra</span>' :
+                  '<span class="badge badge-cor">Cortesía</span>';
+      const pFmt = (item.precio_unitario||0) > 0 ? fmt(item.precio_unitario) : '<span class="gratis">Incluido</span>';
+      const sFmt = (item.total||0) > 0 ? fmt(item.total) : '<span class="gratis">—</span>';
+      return `<tr>
+        <td>${bdg}<div style="font-size:12px;margin-top:3px">${item.descripcion}</div><div style="font-size:10px;color:#777">${item.descripcion_sub||''}</div></td>
+        <td style="text-align:center;color:#aaa">${item.cantidad}</td>
+        <td style="text-align:right;color:#aaa">${pFmt}</td>
+        <td style="text-align:right">${sFmt}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('modal-body').innerHTML = `
+      <div class="modal-unidad">
+        <div><div class="mu-lbl">Económico</div><div class="mu-val">${eco}</div></div>
+        <div><div class="mu-lbl">Modelo</div><div class="mu-val">${u.modelo} ${u.año}</div></div>
+        <div><div class="mu-lbl">KM Actual registrado</div><div class="mu-val">${fmtKm(km)}</div></div>
+        <div><div class="mu-lbl">Próximo servicio</div><div class="mu-val" style="color:#c8a951">${fmtKm(kmServicio)}</div></div>
+        <div><div class="mu-lbl">KM restantes</div><div class="mu-val"><span class="semaforo ${sem.clase}">${fmtKm(sem.restante)}</span></div></div>
+        <div><div class="mu-lbl">Última actualización</div><div class="mu-val">${fecha}</div></div>
+      </div>
+      <div class="modal-km-hdr">Desglose — Servicio ${fmtKm(kmServicio)}</div>
+      <table class="modal-table">
+        <thead><tr><th>Concepto</th><th style="text-align:center">Cant.</th><th style="text-align:right">Precio</th><th style="text-align:right">Total</th></tr></thead>
+        <tbody>${itemsHtml || '<tr><td colspan="4" style="text-align:center;color:#666;padding:20px">Sin datos para este kilometraje</td></tr>'}</tbody>
+      </table>
+      <div class="modal-total"><span>TOTAL CON IVA INCLUIDO</span><span>${fmt(Math.round(total*100)/100)}</span></div>
+    `;
+  } catch(e) {
+    document.getElementById('modal-body').innerHTML = `<div class="loading-msg" style="color:#e74c3c">Error al cargar precios: ${e.message}</div>`;
+  }
+}
+
+function cerrarModal() { document.getElementById('modal').classList.remove('visible'); }
+document.addEventListener('keydown', e => { if(e.key==='Escape') cerrarModal(); });
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function toast(msg, esError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (esError?' error':'') + ' show';
+  setTimeout(() => t.className='toast', 3000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
