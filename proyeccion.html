@@ -79,6 +79,82 @@ td{padding:9px 12px;vertical-align:middle}
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;background:#2ecc71;color:#111;padding:12px 20px;border-radius:8px;font-weight:700;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
+/* SIDE PANEL */
+.sp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:850}
+.sp-overlay.visible{display:block}
+.side-panel{position:fixed;top:0;right:-560px;width:560px;height:100vh;background:#1a1a1a;border-left:2px solid #c8a951;z-index:900;overflow-y:auto;transition:right .3s ease;display:flex;flex-direction:column}
+.side-panel.visible{right:0}
+.sp-hdr{background:#111;padding:16px 20px;border-bottom:2px solid #c8a951;display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0}
+.sp-hdr-left .sp-eco{font-size:22px;font-weight:700;color:#c8a951}
+.sp-hdr-left .sp-modelo{font-size:12px;color:#aaa;margin-top:3px}
+.sp-hdr-left .sp-placa{font-size:11px;color:#666;font-family:monospace;margin-top:1px}
+.sp-close{background:none;border:none;color:#aaa;font-size:24px;cursor:pointer;line-height:1;padding:0}
+.sp-close:hover{color:#fff}
+.sp-body{padding:16px;flex:1}
+.sp-section{margin-bottom:18px}
+.sp-section-title{font-size:10px;color:#c8a951;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #2a2a2a}
+.sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+.sp-item .sp-lbl{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.5px}
+.sp-item .sp-val{font-size:13px;color:#eee;font-weight:600;margin-top:2px}
+.sp-estado-box{background:#252525;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.sp-estado-left .sp-prox-lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.sp-estado-left .sp-prox-val{font-size:20px;font-weight:700;color:#c8a951;margin-top:2px}
+.sp-estado-left .sp-rest{font-size:12px;color:#aaa;margin-top:3px}
+.sp-hist-table{width:100%;border-collapse:collapse;font-size:12px}
+.sp-hist-table th{color:#666;text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;border-bottom:1px solid #2a2a2a}
+.sp-hist-table td{padding:8px 8px;border-bottom:1px solid #1e1e1e;color:#ccc;vertical-align:middle}
+.sp-hist-table tr:last-child td{border-bottom:none}
+.sp-hist-table tbody tr:hover{background:#252525;cursor:pointer}
+.sp-km-chip{display:inline-block;background:#1a2a3a;color:#7ec8e3;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;border:1px solid #4a7a9b;white-space:nowrap}
+.sp-total-chip{color:#c8a951;font-weight:700}
+.sp-no-hist{text-align:center;padding:24px;color:#555;font-style:italic;font-size:12px}
+.sp-hist-click-hint{font-size:10px;color:#555;font-style:italic;text-align:center;padding:0 0 6px}
+/* EXPEDIENTE MODAL */
+.exp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1100;align-items:center;justify-content:center;padding:16px}
+.exp-overlay.visible{display:flex}
+.exp-modal{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;width:min(660px,98vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+.exp-hdr{background:#111;padding:14px 18px;border-bottom:2px solid #c8a951;flex-shrink:0}
+.exp-hdr-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.exp-hdr-eco{font-size:18px;font-weight:700;color:#c8a951}
+.exp-hdr-sub{font-size:11px;color:#666;margin-top:2px}
+.exp-chips{display:flex;gap:8px;flex-wrap:wrap}
+.exp-chip{background:#222;border:1px solid #333;border-radius:7px;padding:5px 11px;font-size:11px;color:#aaa;display:flex;flex-direction:column;gap:1px}
+.exp-chip strong{font-size:13px;color:#eee}
+.exp-tabs{display:flex;background:#111;border-bottom:1px solid #222;flex-shrink:0;overflow-x:auto}
+.exp-tab{padding:10px 14px;font-size:12px;color:#666;cursor:pointer;border-bottom:2px solid transparent;font-weight:600;white-space:nowrap;transition:color .15s,border-color .15s}
+.exp-tab.active{color:#c8a951;border-bottom-color:#c8a951}
+.exp-tab:hover:not(.active){color:#aaa}
+.exp-body{padding:16px 18px;overflow-y:auto;flex:1;min-height:200px}
+.exp-sec-title{font-size:10px;color:#c8a951;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin:14px 0 8px}
+.exp-sec-title:first-child{margin-top:0}
+.chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-bottom:2px}
+.chk-row{display:flex;align-items:center;gap:7px;font-size:12px;padding:4px 0}
+.chk-ico{font-size:12px;flex-shrink:0;font-weight:700}
+.chk-ok{color:#888}.chk-ok .chk-ico{color:#2ecc71}
+.chk-warn{color:#f39c12}.chk-warn .chk-ico{color:#f39c12}
+.chk-bad{color:#e74c3c;font-weight:600}.chk-bad .chk-ico{color:#e74c3c}
+.cobro-box{background:#0f0f0f;border:1px solid #252525;border-radius:8px;padding:12px 14px;margin-top:12px}
+.cobro-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #1a1a1a}
+.cobro-row:last-child{border:none;font-weight:700;font-size:14px;padding-top:8px}
+.cobro-lbl{color:#888}.cobro-val{color:#eee}.cobro-total{color:#c8a951}
+.btn-chklist{display:flex;align-items:center;justify-content:center;gap:6px;background:#1a2a1a;border:1px solid #27ae60;color:#27ae60;padding:9px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;margin-top:12px;width:100%}
+.btn-chklist:hover{background:#27ae60;color:#111}
+.diag-box{background:#0f0f0f;border:1px solid #252525;border-radius:8px;padding:14px;font-size:12px;color:#999;line-height:1.8;margin-bottom:12px}
+.diag-lbl{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.diag-val{font-size:13px;color:#ddd;margin-bottom:10px}
+.oport-card{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;background:#0f0f0f;border:1px solid #252525;margin-bottom:8px}
+.op-badge{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.op-alta{background:#2a0a0a;color:#e74c3c;border:1px solid #4a1a1a}
+.op-media{background:#2a1a00;color:#f39c12;border:1px solid #4a3000}
+.op-baja{background:#0a2a0a;color:#2ecc71;border:1px solid #1a4a1a}
+.op-txt strong{color:#eee;display:block;font-size:12px;margin-bottom:3px}
+.op-txt{font-size:12px;color:#777;line-height:1.6}
+.evid-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.evid-card{background:#111;border:1px dashed #2a2a2a;border-radius:8px;overflow:hidden}
+.evid-thumb{aspect-ratio:1.4;display:flex;align-items:center;justify-content:center;font-size:30px;opacity:.35}
+.evid-cap{padding:6px 8px;font-size:10px;color:#555;text-align:center}
+.exp-close{background:none;border:none;color:#555;font-size:22px;cursor:pointer;line-height:1;padding:0}
+.exp-close:hover{color:#fff}
 @media(max-width:700px){
   .hdr-sub{display:none}
   .resumen,.periodos{padding:12px}
@@ -86,6 +162,8 @@ td{padding:9px 12px;vertical-align:middle}
   .res-card{min-width:130px;padding:12px 14px}
   thead th:nth-child(5),td:nth-child(5){display:none}
   thead th:nth-child(6),td:nth-child(6){display:none}
+  .side-panel{width:100vw;right:-100vw;border-left:none;border-top:2px solid #c8a951}
+  .sp-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -153,6 +231,44 @@ td{padding:9px 12px;vertical-align:middle}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- SIDE PANEL OVERLAY -->
+<div class="sp-overlay" id="sp-overlay" onclick="cerrarFicha()"></div>
+<!-- SIDE PANEL -->
+<div class="side-panel" id="side-panel">
+  <div class="sp-hdr">
+    <div class="sp-hdr-left">
+      <div class="sp-eco" id="sp-eco">—</div>
+      <div class="sp-modelo" id="sp-modelo">—</div>
+      <div class="sp-placa" id="sp-placa">—</div>
+    </div>
+    <button class="sp-close" onclick="cerrarFicha()">✕</button>
+  </div>
+  <div class="sp-body" id="sp-body"><div style="text-align:center;padding:30px;color:#888">Cargando…</div></div>
+</div>
+
+<!-- EXPEDIENTE MODAL -->
+<div class="exp-overlay" id="exp-overlay" onclick="if(event.target===this)cerrarExpediente()">
+  <div class="exp-modal">
+    <div class="exp-hdr">
+      <div class="exp-hdr-top">
+        <div>
+          <div class="exp-hdr-eco" id="exp-eco"></div>
+          <div class="exp-hdr-sub" id="exp-sub"></div>
+        </div>
+        <button class="exp-close" onclick="cerrarExpediente()">✕</button>
+      </div>
+      <div class="exp-chips" id="exp-chips"></div>
+    </div>
+    <div class="exp-tabs">
+      <div class="exp-tab active" onclick="expTab(0,this)">✅ Checklist</div>
+      <div class="exp-tab" onclick="expTab(1,this)">🔍 Diagnóstico</div>
+      <div class="exp-tab" onclick="expTab(2,this)">⚡ Oportunidades</div>
+      <div class="exp-tab" onclick="expTab(3,this)">📷 Evidencia</div>
+    </div>
+    <div class="exp-body" id="exp-body"></div>
+  </div>
+</div>
 
 <script>
 const SUPABASE_URL      = 'https://bgpugtgjbfseqwwcwpyd.supabase.co';
@@ -318,7 +434,37 @@ function buildDemoData() {
     KM[eco]={km:kmA,kmUltimo:kmU};
   });
   DEMO_KM_DATA=KM;
+
+  // ── HISTORIAL ───────────────────────────────────────────────────────────
+  const COSTOS_H={
+    HILUX:[3850,6200,3850,9800,3850,12500,3850,9800],L200_4N16:[3650,5800,3650,9200,3650,11800,3650,9200],
+    L200_4N15:[3650,5800,3650,9200,3650,11800],L200_4D56:[3650,5800,3650,9200,3650,11800],
+    TORNADO:[2800,4500,2800,7200,2800,9000],NP300:[3950,6400,3950,10200,3950,12800],
+    VW:[2600,4200,2600,6800],JAC:[3800,6000,3800,9500,3800,12000],
+    RAM4000:[4200,7100,4200,11500,4200,14000],OTROS:[2500,4000,2500,6500],
+  };
+  function gC2(u,km){const a=COSTOS_H[u.grupo]||COSTOS_H.OTROS;return a[Math.min(km/10000-1,a.length-1)]||a[a.length-1];}
+  function addD(base,d){const dt=new Date(base);dt.setDate(dt.getDate()+d);return dt;}
+  function fmtF(d){return d.toISOString().split('T')[0];}
+  const HIST={};
+  Object.entries(DB).forEach(([eco,u])=>{
+    const d=KM[eco]; if(!d||!d.km||!d.kmUltimo||d.kmUltimo<10000) return;
+    const ultComp=Math.floor(d.kmUltimo/10000)*10000; if(ultComp<10000) return;
+    const hist=[]; const s=eco;
+    const anio=Math.max(2022,2026-Math.ceil(d.km/1000/12*0.4)-1);
+    let fecha=new Date(`${anio}-${sr(s+'fm',1,6).toString().padStart(2,'0')}-01`);
+    for(let km=10000;km<=ultComp;km+=10000){
+      const costo=gC2(u,km);
+      const extra=sr(s+'ex'+km,0,9)<2?sr(s+'ev'+km,600,4500):0;
+      hist.push({fecha:fmtF(fecha),km,desc:`Servicio ${km.toLocaleString('es-MX')} KM — ${km%20000===0?'Afinación mayor':'Afinación + Aceite'}${extra?` + Reparación adicional`:''}`,total:costo+extra});
+      fecha=addD(fecha,sr(s+'sd'+km,55,130));
+    }
+    if(hist.length) HIST[eco]=hist;
+  });
+  DEMO_HISTORIAL=HIST;
 }
+
+let DEMO_HISTORIAL = null;
 
 // ── ESTADO ────────────────────────────────────────────────────────────────
 let kmData = {};
@@ -439,7 +585,7 @@ function renderTabla(unidades) {
     const restLabel = restante<=0 ? `${fmtKm(Math.abs(restante))} VENCIDO` : fmtKm(restante);
     const restColor = estadoKey==='rojo'?'#e74c3c':estadoKey==='amarillo'?'#f39c12':'#2ecc71';
 
-    html += `<tr>
+    html += `<tr onclick="abrirFicha('${eco}')" style="cursor:pointer" title="Ver bitácora de ${eco}">
       <td><span class="eco">${eco}</span></td>
       <td><div class="modelo">${u.modelo} <span style="color:#555;font-size:10px">${u.año}</span></div></td>
       <td><span class="km-chip">${fmtKm(km)}</span></td>
@@ -456,7 +602,7 @@ function renderTabla(unidades) {
 
 // ── DEMO MODE ─────────────────────────────────────────────────────────────
 function toggleDemo() {
-  buildDemoData();
+  buildDemoData(); // genera DEMO_KM_DATA + DEMO_HISTORIAL
   demoMode = !demoMode;
   const btn = document.getElementById('btn-demo');
   const banner = document.getElementById('demo-banner');
@@ -467,6 +613,230 @@ function toggleDemo() {
 }
 
 init();
+
+// ── SIDE PANEL ────────────────────────────────────────────────────────────
+function fmtKm(n){ return n.toLocaleString('es-MX')+' KM'; }
+function fmtM(n){ return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+
+function calcProximoFicha(km, kmUltimo) {
+  if (kmUltimo && kmUltimo > 0) return Math.ceil((kmUltimo+1)/10000)*10000;
+  return Math.ceil((km+1)/10000)*10000;
+}
+
+function abrirFicha(eco) {
+  const u = DB[eco];
+  if (!u) return;
+  const d = demoMode && DEMO_KM_DATA ? DEMO_KM_DATA[eco] : null;
+  const km = d ? d.km : null;
+  const kmUltimo = d ? d.kmUltimo : null;
+
+  document.getElementById('sp-eco').textContent = eco;
+  document.getElementById('sp-modelo').textContent = `${u.modelo} ${u.año}`;
+  document.getElementById('sp-placa').textContent = u.placas || '—';
+
+  let estadoHtml = '';
+  if (km) {
+    const proximo = calcProximoFicha(km, kmUltimo);
+    const restante = proximo - km;
+    let clase = restante<=0?'s-rojo':restante<1000?'s-rojo':restante<=3000?'s-amarillo':'s-verde';
+    let label = restante<=0?'VENCIDO':restante<1000?'URGENTE':restante<=3000?'Próximo':'Al día';
+    const color = clase==='s-rojo'?'#e74c3c':clase==='s-amarillo'?'#f39c12':'#2ecc71';
+    const restLabel = restante<=0?`${fmtKm(Math.abs(restante))} VENCIDO`:`${fmtKm(restante)} para el siguiente servicio`;
+    estadoHtml = `<div class="sp-estado-box">
+      <div class="sp-estado-left">
+        <div class="sp-prox-lbl">Próximo Servicio</div>
+        <div class="sp-prox-val">${fmtKm(proximo)}</div>
+        <div class="sp-rest" style="color:${color}">${restLabel}</div>
+      </div>
+      <span class="semaforo ${clase}">${label}</span>
+    </div>`;
+  } else {
+    estadoHtml = `<div class="sp-estado-box"><span style="color:#666;font-style:italic">Sin KM registrado</span></div>`;
+  }
+
+  const hist = demoMode && DEMO_HISTORIAL ? (DEMO_HISTORIAL[eco] || []) : [];
+  let histHtml = '';
+  if (hist.length > 0) {
+    const total = hist.reduce((s,h)=>s+h.total,0);
+    histHtml = `
+      <div class="sp-hist-click-hint">Toca un servicio para ver su expediente →</div>
+      <table class="sp-hist-table">
+        <thead><tr><th>Fecha</th><th>KM</th><th>Servicio</th><th style="text-align:right">Total</th></tr></thead>
+        <tbody>
+          ${hist.map((h,idx)=>`<tr onclick="abrirExpediente('${eco}',${idx})" title="Ver expediente completo">
+            <td style="white-space:nowrap">${new Date(h.fecha).toLocaleDateString('es-MX')}</td>
+            <td><span class="sp-km-chip">${h.km.toLocaleString('es-MX')}</span></td>
+            <td style="font-size:11px;color:#aaa">${h.desc}</td>
+            <td style="text-align:right" class="sp-total-chip">${fmtM(h.total)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="text-align:right;margin-top:8px;font-size:12px;color:#888">
+        Inversión acumulada: <span style="color:#c8a951;font-weight:700">${fmtM(total)}</span>
+      </div>`;
+  } else {
+    histHtml = `<div class="sp-no-hist">${demoMode?'Sin historial registrado para esta unidad':'Activa el Modo Demo para ver el historial simulado'}</div>`;
+  }
+
+  const kmDia = parseInt(document.getElementById('km-dia').value)||200;
+  const costEst = km ? fmtM(getCostoEstimado(eco, km?calcProximoFicha(km,kmUltimo):10000)) : '—';
+  const diasEst = km ? Math.ceil(Math.max(0,calcProximoFicha(km,kmUltimo)-km)/kmDia) : null;
+
+  document.getElementById('sp-body').innerHTML = `
+    ${estadoHtml}
+    <div class="sp-section">
+      <div class="sp-section-title">Ficha Técnica</div>
+      <div class="sp-grid">
+        <div class="sp-item"><div class="sp-lbl">Marca</div><div class="sp-val">${u.marca}</div></div>
+        <div class="sp-item"><div class="sp-lbl">Año</div><div class="sp-val">${u.año}</div></div>
+        <div class="sp-item"><div class="sp-lbl">Placas</div><div class="sp-val" style="font-family:monospace">${u.placas||'—'}</div></div>
+        <div class="sp-item"><div class="sp-lbl">KM Actual</div><div class="sp-val">${km?fmtKm(km):'—'}</div></div>
+        ${diasEst!==null?`<div class="sp-item"><div class="sp-lbl">Días estimados</div><div class="sp-val">${diasEst} días</div></div>`:''}
+        <div class="sp-item"><div class="sp-lbl">Costo estimado</div><div class="sp-val" style="color:#c8a951">${costEst}</div></div>
+      </div>
+    </div>
+    <div class="sp-section">
+      <div class="sp-section-title">Historial de Servicios</div>
+      ${histHtml}
+    </div>
+  `;
+
+  document.getElementById('sp-overlay').classList.add('visible');
+  document.getElementById('side-panel').classList.add('visible');
+}
+
+function cerrarFicha() {
+  document.getElementById('sp-overlay').classList.remove('visible');
+  document.getElementById('side-panel').classList.remove('visible');
+}
+
+// ── EXPEDIENTE MODAL ──────────────────────────────────────────────────────
+let _expEco=null, _expHistIdx=null;
+
+function _sr(seed,min,max){let h=0;for(let i=0;i<seed.length;i++)h=((h<<5)-h+seed.charCodeAt(i))|0;return min+(Math.abs(h)%(max-min+1));}
+
+function genChecklist(eco,km){
+  const s=`${eco}${km}`;
+  return [
+    {t:'Motor y aceite',items:[
+      {l:'Cambio de aceite motor',st:'ok'},{l:'Filtro de aceite',st:'ok'},
+      {l:'Filtro de aire',st:_sr(s+'fa',0,9)<7?'ok':'warn'},
+      {l:'Filtro de cabina',st:_sr(s+'fc',0,9)<5?'ok':'warn'},
+      {l:'Nivel anticongelante',st:_sr(s+'ac',0,9)<8?'ok':'warn'},
+      {l:'Líquido dirección',st:'ok'},
+    ]},
+    {t:'Frenos',items:[
+      {l:'Pastillas delanteras',st:_sr(s+'pd',0,9)<7?'ok':_sr(s+'pd2',0,1)===0?'warn':'bad'},
+      {l:'Pastillas traseras',st:_sr(s+'pt',0,9)<6?'ok':_sr(s+'pt2',0,1)===0?'warn':'bad'},
+      {l:'Discos delanteros',st:_sr(s+'dd',0,9)<8?'ok':'warn'},
+      {l:'Líquido de frenos',st:_sr(s+'lf',0,9)<8?'ok':'warn'},
+    ]},
+    {t:'Suspensión',items:[
+      {l:'Amortiguadores del.',st:_sr(s+'amd',0,9)<8?'ok':'warn'},
+      {l:'Amortiguadores tras.',st:_sr(s+'amt',0,9)<7?'ok':_sr(s+'amt2',0,1)===0?'warn':'bad'},
+      {l:'Rótulas y terminales',st:_sr(s+'rt',0,9)<8?'ok':'warn'},
+      {l:'Bujes de suspensión',st:_sr(s+'bs',0,9)<7?'ok':'warn'},
+    ]},
+    {t:'Eléctrico',items:[
+      {l:'Batería',st:_sr(s+'bat',0,9)<8?'ok':'warn'},{l:'Alternador',st:_sr(s+'alt',0,9)<9?'ok':'warn'},
+      {l:'Luces delanteras',st:_sr(s+'lud',0,9)<9?'ok':'warn'},{l:'Luces traseras',st:_sr(s+'lut',0,9)<9?'ok':'warn'},
+    ]},
+    {t:'Llantas',items:[
+      {l:'Presión del. izq.',st:'ok'},{l:'Presión del. der.',st:'ok'},
+      {l:'Presión tras. izq.',st:_sr(s+'pti',0,9)<8?'ok':'warn'},
+      {l:'Presión tras. der.',st:_sr(s+'ptd',0,9)<8?'ok':'warn'},
+      {l:'Desgaste general',st:_sr(s+'dg',0,9)<6?'ok':_sr(s+'dg2',0,1)===0?'warn':'bad'},
+    ]},
+  ];
+}
+
+const _DIAG=['Vehículo en buen estado general. Cambio de aceite y filtros según programa. Sin anomalías en frenos ni suspensión. Diagnóstico OBD sin códigos activos.','Motor dentro de parámetros. Desgaste en pastillas traseras (~30% vida restante), documentado para cotización en próxima visita.','Filtro de aire con acumulación de polvo (operación en terracería), reemplazado preventivamente. Resto de sistemas en buen estado.','Frenos en buen estado. Suspensión sin holguras. Revisión de 60 puntos completada. Recomendación: calibración freno de estacionamiento.','Servicio completado según programa. Batería a 12.6V. Eléctrico funcionando correctamente. Sin observaciones adicionales.'];
+const _OPORT=[{p:'alta',t:'Pastillas traseras al límite',d:'Menos del 20% de vida útil. Reemplazar en máximo 5,000 KM para evitar daño a discos.'},{p:'alta',t:'Fuga en sello de diferencial',d:'Micro-fuga detectada. Monitorear nivel cada 2,000 KM. Reparación en próxima visita.'},{p:'media',t:'Amortiguador trasero der.',d:'Inicio de fuga de aceite. Cotizar reemplazo para el siguiente intervalo.'},{p:'media',t:'Filtro de combustible',d:'Según programa del fabricante, cambio recomendado en el siguiente servicio.'},{p:'media',t:'Calibración freno de estacionamiento',d:'Cable con holgura leve. Trabajo menor en próxima visita.'},{p:'baja',t:'Bujías (preventivo)',d:'A 10,000 KM del intervalo recomendado. Programar para el siguiente servicio.'},{p:'baja',t:'Flush de enfriamiento',d:'Cambio de anticongelante según programa de mantenimiento mayor.'},{p:'baja',t:'Limpieza de inyectores',d:'Depósito leve detectado. Tratamiento preventivo en próximo servicio.'}];
+const _EVID=['Lectura odómetro','Filtros reemplazados','Estado pastillas','Aceite instalado','Estado llantas','Diagnóstico OBD','Fuga detectada','Revisión suspensión'];
+const _TECS=['Ing. Martínez','Carlos R.','Tec. Flores','Tec. Gutiérrez','Roberto M.'];
+
+function abrirExpediente(eco, histIdx) {
+  _expEco=eco; _expHistIdx=histIdx;
+  const u=DB[eco];
+  const hist=demoMode&&DEMO_HISTORIAL?(DEMO_HISTORIAL[eco]||[]):[];
+  const h=hist[histIdx];
+  if(!h||!u) return;
+  document.getElementById('exp-eco').textContent=`${eco} — Expediente de Servicio`;
+  document.getElementById('exp-sub').textContent=`${u.modelo} · ${u.año} · ${u.placas||'—'}`;
+  document.getElementById('exp-chips').innerHTML=
+    `<div class="exp-chip"><span>Fecha</span><strong>${new Date(h.fecha).toLocaleDateString('es-MX')}</strong></div>
+     <div class="exp-chip"><span>KM Servicio</span><strong>${h.km.toLocaleString('es-MX')} KM</strong></div>
+     <div class="exp-chip"><span>Tipo</span><strong>${h.km%20000===0?'Afinación Mayor':'Afinación + Aceite'}</strong></div>
+     <div class="exp-chip"><span>Total</span><strong style="color:#c8a951">$${h.total.toLocaleString('es-MX')}</strong></div>`;
+  document.querySelectorAll('.exp-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  renderExpTab(0);
+  document.getElementById('exp-overlay').classList.add('visible');
+}
+
+function cerrarExpediente() {
+  document.getElementById('exp-overlay').classList.remove('visible');
+}
+
+function expTab(idx,el) {
+  document.querySelectorAll('.exp-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderExpTab(idx);
+}
+
+function renderExpTab(idx) {
+  const eco=_expEco, hi=_expHistIdx;
+  const u=DB[eco];
+  const hist=demoMode&&DEMO_HISTORIAL?(DEMO_HISTORIAL[eco]||[]):[];
+  const h=hist[hi];
+  if(!h||!u) return;
+  const s=`${eco}${h.km}`;
+  const body=document.getElementById('exp-body');
+  if(idx===0){
+    const grupos=genChecklist(eco,h.km);
+    const ico={ok:'✓',warn:'⚠',bad:'✗'};
+    let html=grupos.map(g=>`<div class="exp-sec-title">${g.t}</div><div class="chk-grid">${g.items.map(it=>`<div class="chk-row chk-${it.st}"><span class="chk-ico">${ico[it.st]}</span>${it.l}</div>`).join('')}</div>`).join('');
+    const mo=Math.round(h.total*(_sr(s+'mo',35,45)/100)/10)*10, ref=h.total-mo;
+    html+=`<div class="cobro-box"><div class="exp-sec-title" style="margin-top:0;margin-bottom:10px">Resumen de cobro</div>
+      <div class="cobro-row"><span class="cobro-lbl">Refacciones</span><span class="cobro-val">$${ref.toLocaleString('es-MX')}</span></div>
+      <div class="cobro-row"><span class="cobro-lbl">Mano de obra</span><span class="cobro-val">$${mo.toLocaleString('es-MX')}</span></div>
+      <div class="cobro-row"><span class="cobro-lbl">Total</span><span class="cobro-total">$${h.total.toLocaleString('es-MX')}</span></div></div>
+      <button class="btn-chklist" onclick="alert('Próximamente: integración con checklist de Henry\\'s Diagnostics')">📋 Ver checklist completo de 60 puntos →</button>`;
+    body.innerHTML=html;
+  } else if(idx===1){
+    const tec=_TECS[_sr(s+'tec',0,_TECS.length-1)];
+    const nota=_DIAG[_sr(s+'dn',0,_DIAG.length-1)];
+    const obd=_sr(s+'obd',0,9)<8?'Sin códigos activos':`P${_sr(s+'cod',1000,9999)} — ${['Sensor MAP','Sensor O2','EGR','Sensor temperatura'][_sr(s+'dt',0,3)]}`;
+    body.innerHTML=`<div class="exp-sec-title">Diagnóstico del técnico</div><div class="diag-box">${nota}</div>
+      <div class="exp-sec-title">Datos del servicio</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px">
+        <div><div class="diag-lbl">Técnico asignado</div><div class="diag-val">${tec}</div></div>
+        <div><div class="diag-lbl">KM registrado en taller</div><div class="diag-val">${h.km.toLocaleString('es-MX')} KM</div></div>
+        <div><div class="diag-lbl">Diagnóstico OBD</div><div class="diag-val" style="color:${obd.startsWith('Sin')?'#2ecc71':'#f39c12'}">${obd}</div></div>
+        <div><div class="diag-lbl">Tipo de servicio</div><div class="diag-val">${h.km%20000===0?'Afinación Mayor':'Afinación + Aceite'}</div></div>
+      </div>`;
+  } else if(idx===2){
+    const nOp=_sr(s+'nop',1,3);
+    const idxs=[];
+    for(let i=0;i<_OPORT.length;i++){if(_sr(s+'op'+i,0,3)<2)idxs.push(i);if(idxs.length>=nOp)break;}
+    while(idxs.length<nOp)idxs.push(_sr(s+'opi'+idxs.length,0,_OPORT.length-1));
+    const uq=[...new Set(idxs)].slice(0,nOp);
+    const pC={alta:'op-alta',media:'op-media',baja:'op-baja'},pL={alta:'Alta',media:'Media',baja:'Baja'};
+    let html=`<div class="exp-sec-title">Servicios recomendados para próxima visita</div>`;
+    html+=uq.map(i=>{const op=_OPORT[i];return `<div class="oport-card"><span class="op-badge ${pC[op.p]}">${pL[op.p]}</span><div class="op-txt"><strong>${op.t}</strong>${op.d}</div></div>`;}).join('');
+    if(!uq.length) html+=`<div style="text-align:center;padding:30px;color:#555;font-style:italic">Sin oportunidades detectadas</div>`;
+    body.innerHTML=html;
+  } else {
+    const nF=_sr(s+'nf',3,6);
+    body.innerHTML=`<div class="exp-sec-title">Evidencia fotográfica</div>
+      <div class="evid-grid">${Array.from({length:nF},(_,i)=>`<div class="evid-card"><div class="evid-thumb">📷</div><div class="evid-cap">${_EVID[_sr(s+'ef'+i,0,_EVID.length-1)]}</div></div>`).join('')}</div>
+      <div style="margin-top:14px;padding:12px;background:#0f0f0f;border:1px solid #252525;border-radius:8px;font-size:11px;color:#555;text-align:center;line-height:1.7">
+        📎 En producción las fotos se adjuntan desde el checklist de Henry's Diagnostics.<br>
+        <span style="color:#3a3a3a">Pendiente de integración con sistema interno.</span>
+      </div>`;
+  }
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') { cerrarExpediente(); cerrarFicha(); } });
 </script>
 </body>
 </html>
