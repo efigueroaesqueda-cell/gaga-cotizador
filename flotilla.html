@@ -26,9 +26,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#1a1a1a;color:#eee;min-h
 .toolbar{padding:0 24px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .toolbar input[type=text]{background:#2a2a2a;border:1px solid #444;color:#eee;padding:7px 12px;border-radius:6px;font-size:13px;width:220px}
 .toolbar input[type=text]::placeholder{color:#666}
-.btn-save{background:#c8a951;color:#111;border:none;padding:8px 20px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;margin-left:auto}
-.btn-save:hover{background:#e0bf60}
-.btn-save:disabled{background:#555;color:#888;cursor:not-allowed}
+.auto-save-note{margin-left:auto;font-size:11px;color:#666;font-style:italic;align-self:center}
 .filtros{display:flex;gap:6px}
 .f-btn{background:#2a2a2a;border:1px solid #444;color:#ccc;padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer}
 .f-btn.activo{background:#c8a951;color:#111;border-color:#c8a951;font-weight:600}
@@ -47,6 +45,9 @@ td{padding:9px 12px;vertical-align:middle}
 .km-input{background:#2a2a2a;border:1px solid #444;color:#eee;padding:5px 8px;border-radius:4px;font-size:13px;width:90px;text-align:right}
 .km-input:focus{outline:none;border-color:#c8a951}
 .km-input.changed{border-color:#f39c12;background:#1e1a0a}
+.ult-input{background:#1e2a1e;border:1px solid #2a4a2a;color:#aaa;padding:4px 6px;border-radius:4px;font-size:12px;width:80px;text-align:right}
+.ult-input:focus{outline:none;border-color:#27ae60}
+.ult-input.changed{border-color:#27ae60;background:#162216}
 .proximo{font-size:12px;color:#aaa}
 .restante{font-size:12px;font-weight:600}
 /* SEMÁFORO */
@@ -122,7 +123,7 @@ td{padding:9px 12px;vertical-align:middle}
     <button class="f-btn" onclick="filtrar('verde',this)">🟢 Al día</button>
     <button class="f-btn" onclick="filtrar('gris',this)">⚫ Sin registro</button>
   </div>
-  <button class="btn-save" id="btn-guardar" onclick="guardarTodos()" disabled>💾 Guardar cambios</button>
+  <span class="auto-save-note" id="save-note">⚡ Auto-guardado al cambiar renglón</span>
 </div>
 
 <!-- TABLA -->
@@ -133,6 +134,7 @@ td{padding:9px 12px;vertical-align:middle}
         <th>Eco</th>
         <th>Modelo / Placa</th>
         <th>KM Actual</th>
+        <th title="KM al que se realizó el último servicio">Último Serv.</th>
         <th>Próximo Servicio</th>
         <th>KM Restantes</th>
         <th>Estado</th>
@@ -140,7 +142,7 @@ td{padding:9px 12px;vertical-align:middle}
       </tr>
     </thead>
     <tbody id="tbl-body">
-      <tr><td colspan="7" class="loading-msg">Cargando flotilla…</td></tr>
+      <tr><td colspan="8" class="loading-msg">Cargando flotilla…</td></tr>
     </tbody>
   </table>
 </div>
@@ -317,13 +319,21 @@ function getTipoVehiculo(v) {
 }
 
 // ── SEMÁFORO ──────────────────────────────────────────────────────────────
-function calcSemaforo(kmActual) {
-  const proximo = Math.ceil((kmActual + 1) / 10000) * 10000;
+// kmUltimoServicio: si se proporciona, próximo = kmUltimo + 10,000
+// Permite detectar cuando el servicio anterior no se realizó aunque el KM ya lo superó
+function calcSemaforo(kmActual, kmUltimoServicio) {
+  let proximo;
+  if (kmUltimoServicio && kmUltimoServicio > 0) {
+    proximo = kmUltimoServicio + 10000;
+  } else {
+    proximo = Math.ceil((kmActual + 1) / 10000) * 10000;
+  }
   const restante = proximo - kmActual;
   let clase, label;
-  if (restante < 1000)       { clase='s-rojo';     label='URGENTE'; }
-  else if (restante < 3000)  { clase='s-amarillo';  label='Próximo'; }
-  else                       { clase='s-verde';     label='Al día';  }
+  if (restante <= 0)          { clase='s-rojo';    label='VENCIDO'; }
+  else if (restante < 1000)   { clase='s-rojo';    label='URGENTE'; }
+  else if (restante < 3000)   { clase='s-amarillo'; label='Próximo'; }
+  else                        { clase='s-verde';    label='Al día';  }
   return { proximo, restante, clase, label };
 }
 
@@ -331,16 +341,19 @@ function fmt(n) { return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,m
 function fmtKm(n) { return n.toLocaleString('es-MX')+' KM'; }
 
 // ── ESTADO GLOBAL ─────────────────────────────────────────────────────────
-let kmData = {};       // eco → km_actual guardado
-let kmEdits = {};      // eco → km editado pero no guardado
+let kmData = {};        // eco → { km, fecha, kmUltimo } guardado en DB
+let kmEdits = {};       // eco → km_actual editado pero no guardado aún
+let ultimoEdits = {};   // eco → km_ultimo_servicio editado pero no guardado aún
 let filtroCurrent = 'todos';
 let _preciosCache = {};
 
 // ── CARGA INICIAL ─────────────────────────────────────────────────────────
 async function init() {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/kilometrajes?select=eco,km_actual,fecha_captura`, { headers: HEADERS });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/kilometrajes?select=eco,km_actual,km_ultimo_servicio,fecha_captura`, { headers: HEADERS });
   const rows = await r.json();
-  if (Array.isArray(rows)) rows.forEach(r => { kmData[r.eco] = { km: r.km_actual, fecha: r.fecha_captura }; });
+  if (Array.isArray(rows)) rows.forEach(r => {
+    kmData[r.eco] = { km: r.km_actual, fecha: r.fecha_captura, kmUltimo: r.km_ultimo_servicio };
+  });
   renderTabla();
 }
 
@@ -367,9 +380,10 @@ function renderTabla() {
 
   Object.entries(DB).forEach(([eco, u]) => {
     const km = kmEdits[eco] !== undefined ? kmEdits[eco] : (kmData[eco]?.km ?? null);
+    const kmUltimo = ultimoEdits[eco] !== undefined ? ultimoEdits[eco] : (kmData[eco]?.kmUltimo ?? null);
     const sinRegistro = km === null;
     let estadoKey = 'gris', sem = null;
-    if (!sinRegistro) { sem = calcSemaforo(km); estadoKey = sem.clase.replace('s-',''); }
+    if (!sinRegistro) { sem = calcSemaforo(km, kmUltimo); estadoKey = sem.clase.replace('s-',''); }
 
     // Filtro estado
     if (filtroCurrent !== 'todos' && estadoKey !== filtroCurrent) return;
@@ -387,24 +401,31 @@ function renderTabla() {
     // Header de grupo
     if (u.grupo !== grupoActual) {
       grupoActual = u.grupo;
-      html += `<tr class="grupo-hdr"><td colspan="7">${GRUPOS_LABEL[u.grupo]||u.grupo}</td></tr>`;
+      html += `<tr class="grupo-hdr"><td colspan="8">${GRUPOS_LABEL[u.grupo]||u.grupo}</td></tr>`;
     }
 
     const kmVal = km !== null ? km : '';
-    const pendiente = kmEdits[eco] !== undefined ? ' pendiente' : '';
-    const changed = kmEdits[eco] !== undefined ? ' changed' : '';
+    const ultVal = kmUltimo !== null ? kmUltimo : '';
+    const pendiente = (kmEdits[eco] !== undefined || ultimoEdits[eco] !== undefined) ? ' pendiente' : '';
+    const changedKm = kmEdits[eco] !== undefined ? ' changed' : '';
+    const changedUlt = ultimoEdits[eco] !== undefined ? ' changed' : '';
 
     const semHtml = sinRegistro
       ? '<span class="semaforo s-gris">Sin registro</span>'
       : `<span class="semaforo ${sem.clase}">${sem.label}</span>`;
     const proxHtml = sinRegistro ? '<span style="color:#555">—</span>' : fmtKm(sem.proximo);
+    const restColor = estadoKey==='rojo'?'#e74c3c':estadoKey==='amarillo'?'#f39c12':'#2ecc71';
+    const restLabel = sem && sem.restante <= 0
+      ? `${fmtKm(Math.abs(sem.restante))} VENCIDO`
+      : sem ? fmtKm(sem.restante) : '';
     const restHtml = sinRegistro ? '<span style="color:#555">—</span>'
-      : `<span class="restante" style="color:${estadoKey==='rojo'?'#e74c3c':estadoKey==='amarillo'?'#f39c12':'#2ecc71'}">${fmtKm(sem.restante)}</span>`;
+      : `<span class="restante" style="color:${restColor}">${restLabel}</span>`;
 
     html += `<tr class="${pendiente}" data-eco="${eco}">
       <td><span class="eco">${eco}</span></td>
       <td><div class="modelo">${u.modelo} <span style="color:#666;font-size:10px">${u.año}</span></div><div class="placa">${u.placas}</div></td>
-      <td><input class="km-input${changed}" type="number" min="0" max="999999" step="1" value="${kmVal}" placeholder="—" data-eco="${eco}" onchange="onKmChange('${eco}',this.value)" oninput="onKmInput(this,'${eco}')"></td>
+      <td><input class="km-input${changedKm}" type="number" min="0" max="999999" step="1" value="${kmVal}" placeholder="—" data-eco="${eco}" oninput="onKmInput(this,'${eco}')" onblur="onKmBlur('${eco}')"></td>
+      <td><input class="ult-input${changedUlt}" type="number" min="0" max="999999" step="1" value="${ultVal}" placeholder="—" title="KM del último servicio realizado" oninput="onUltimoInput(this,'${eco}')" onblur="onUltimoBlur('${eco}')"></td>
       <td class="cel-proximo">${proxHtml}</td>
       <td class="cel-restante">${restHtml}</td>
       <td class="cel-sem">${semHtml}</td>
@@ -412,7 +433,7 @@ function renderTabla() {
     </tr>`;
   });
 
-  tbody.innerHTML = html || '<tr><td colspan="7" style="text-align:center;padding:30px;color:#666">Sin resultados</td></tr>';
+  tbody.innerHTML = html || '<tr><td colspan="8" style="text-align:center;padding:30px;color:#666">Sin resultados</td></tr>';
   document.getElementById('cnt-rojo').textContent = cntRojo;
   document.getElementById('cnt-amarillo').textContent = cntAmarillo;
   document.getElementById('cnt-verde').textContent = cntVerde;
@@ -428,11 +449,8 @@ function onKmInput(input, eco) {
 
   if (!isNaN(n) && n > 0) {
     kmEdits[eco] = n;
-    const sem = calcSemaforo(n);
-    const colorMap = {'s-rojo':'#e74c3c','s-amarillo':'#f39c12','s-verde':'#2ecc71'};
-    tr.querySelector('.cel-proximo').innerHTML = fmtKm(sem.proximo);
-    tr.querySelector('.cel-restante').innerHTML = `<span class="restante" style="color:${colorMap[sem.clase]||'#aaa'}">${fmtKm(sem.restante)}</span>`;
-    tr.querySelector('.cel-sem').innerHTML = `<span class="semaforo ${sem.clase}">${sem.label}</span>`;
+    const kmUltimo = ultimoEdits[eco] !== undefined ? ultimoEdits[eco] : (kmData[eco]?.kmUltimo ?? null);
+    actualizarCeldasSem(tr, n, kmUltimo);
     tr.classList.add('pendiente');
     input.classList.add('changed');
   } else {
@@ -440,20 +458,56 @@ function onKmInput(input, eco) {
     tr.querySelector('.cel-proximo').innerHTML = '<span style="color:#555">—</span>';
     tr.querySelector('.cel-restante').innerHTML = '<span style="color:#555">—</span>';
     tr.querySelector('.cel-sem').innerHTML = '<span class="semaforo s-gris">Sin registro</span>';
-    tr.classList.remove('pendiente');
+    if (ultimoEdits[eco] === undefined) tr.classList.remove('pendiente');
     input.classList.remove('changed');
   }
-  document.getElementById('btn-guardar').disabled = Object.keys(kmEdits).length === 0;
   actualizarContadores();
+}
+
+// ── ÚLTIMO SERVICIO INPUT en vivo ────────────────────────────────────────
+function onUltimoInput(input, eco) {
+  const n = parseInt(input.value);
+  const tr = input.closest('tr');
+  if (!tr) return;
+
+  if (!isNaN(n) && n > 0) {
+    ultimoEdits[eco] = n;
+    const kmActual = kmEdits[eco] !== undefined ? kmEdits[eco] : (kmData[eco]?.km ?? null);
+    if (kmActual !== null) actualizarCeldasSem(tr, kmActual, n);
+    tr.classList.add('pendiente');
+    input.classList.add('changed');
+  } else {
+    delete ultimoEdits[eco];
+    // Recalcular semáforo sin kmUltimo
+    const kmActual = kmEdits[eco] !== undefined ? kmEdits[eco] : (kmData[eco]?.km ?? null);
+    if (kmActual !== null) actualizarCeldasSem(tr, kmActual, null);
+    if (kmEdits[eco] === undefined) tr.classList.remove('pendiente');
+    input.classList.remove('changed');
+  }
+  actualizarContadores();
+}
+
+// ── HELPER: actualiza celdas de semáforo en una fila ─────────────────────
+function actualizarCeldasSem(tr, kmActual, kmUltimo) {
+  const sem = calcSemaforo(kmActual, kmUltimo);
+  const colorMap = {'s-rojo':'#e74c3c','s-amarillo':'#f39c12','s-verde':'#2ecc71'};
+  const color = colorMap[sem.clase] || '#aaa';
+  const restLabel = sem.restante <= 0
+    ? `${fmtKm(Math.abs(sem.restante))} VENCIDO`
+    : fmtKm(sem.restante);
+  tr.querySelector('.cel-proximo').innerHTML = fmtKm(sem.proximo);
+  tr.querySelector('.cel-restante').innerHTML = `<span class="restante" style="color:${color}">${restLabel}</span>`;
+  tr.querySelector('.cel-sem').innerHTML = `<span class="semaforo ${sem.clase}">${sem.label}</span>`;
 }
 
 function actualizarContadores() {
   let r=0, a=0, v=0, g=0, t=0;
-  Object.entries(DB).forEach(([eco, u]) => {
+  Object.entries(DB).forEach(([eco]) => {
     const km = kmEdits[eco] !== undefined ? kmEdits[eco] : (kmData[eco]?.km ?? null);
+    const kmUltimo = ultimoEdits[eco] !== undefined ? ultimoEdits[eco] : (kmData[eco]?.kmUltimo ?? null);
     t++;
     if (km === null || km === 0) { g++; return; }
-    const sem = calcSemaforo(km);
+    const sem = calcSemaforo(km, kmUltimo);
     if (sem.clase==='s-rojo') r++;
     else if (sem.clase==='s-amarillo') a++;
     else v++;
@@ -465,41 +519,47 @@ function actualizarContadores() {
   document.getElementById('cnt-total').textContent = t;
 }
 
-// ── KM CHANGE (al salir del campo) ───────────────────────────────────────
-function onKmChange(eco, val) {
-  const n = parseInt(val);
-  if (!isNaN(n) && n > 0) kmEdits[eco] = n;
-  else delete kmEdits[eco];
-  document.getElementById('btn-guardar').disabled = Object.keys(kmEdits).length === 0;
+// ── AUTO-SAVE AL SALIR DEL CAMPO ─────────────────────────────────────────
+async function onKmBlur(eco) {
+  if (kmEdits[eco] === undefined) return;
+  await guardarUno(eco);
 }
 
-// ── GUARDAR ──────────────────────────────────────────────────────────────
-async function guardarTodos() {
-  const btn = document.getElementById('btn-guardar');
-  btn.disabled = true;
-  btn.textContent = 'Guardando…';
+async function onUltimoBlur(eco) {
+  if (ultimoEdits[eco] === undefined) return;
+  await guardarUno(eco);
+}
 
-  const entries = Object.entries(kmEdits);
-  let ok = 0, err = 0;
+// ── GUARDAR UNA UNIDAD ────────────────────────────────────────────────────
+async function guardarUno(eco) {
+  const payload = { eco, fecha_captura: new Date().toISOString() };
+  const kmActual = kmEdits[eco] !== undefined ? kmEdits[eco] : (kmData[eco]?.km ?? null);
+  const kmUltimo = ultimoEdits[eco] !== undefined ? ultimoEdits[eco] : (kmData[eco]?.kmUltimo ?? null);
+  if (kmActual !== null) payload.km_actual = kmActual;
+  if (kmUltimo !== null) payload.km_ultimo_servicio = kmUltimo;
 
-  for (const [eco, km] of entries) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/kilometrajes?on_conflict=eco`, {
-      method: 'POST',
-      headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify({ eco, km_actual: km, fecha_captura: new Date().toISOString() })
-    });
-    if (r.ok || r.status === 201 || r.status === 204) {
-      kmData[eco] = { km, fecha: new Date().toISOString() };
-      ok++;
-    } else { err++; }
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/kilometrajes?on_conflict=eco`, {
+    method: 'POST',
+    headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(payload)
+  });
+
+  if (r.ok || r.status === 201 || r.status === 204) {
+    kmData[eco] = kmData[eco] || {};
+    if (kmEdits[eco] !== undefined) { kmData[eco].km = kmEdits[eco]; delete kmEdits[eco]; }
+    if (ultimoEdits[eco] !== undefined) { kmData[eco].kmUltimo = ultimoEdits[eco]; delete ultimoEdits[eco]; }
+    kmData[eco].fecha = new Date().toISOString();
+
+    // Quitar highlight de la fila
+    const tr = document.querySelector(`tr[data-eco="${eco}"]`);
+    if (tr) {
+      tr.classList.remove('pendiente');
+      tr.querySelectorAll('.km-input,.ult-input').forEach(i => i.classList.remove('changed'));
+    }
+    toast(`✅ ${eco} guardado`, false);
+  } else {
+    toast(`⚠️ Error al guardar ${eco}`, true);
   }
-
-  kmEdits = {};
-  btn.textContent = '💾 Guardar cambios';
-  renderTabla();
-
-  if (err === 0) toast(`✅ ${ok} unidad${ok!==1?'es':''} guardada${ok!==1?'s':''}`, false);
-  else toast(`⚠️ ${ok} OK, ${err} error(es)`, true);
 }
 
 // ── FILTROS ───────────────────────────────────────────────────────────────
@@ -517,6 +577,7 @@ async function verCotizacion(eco, event) {
   event.stopPropagation();
   const u = DB[eco];
   const km = kmEdits[eco] !== undefined ? kmEdits[eco] : (kmData[eco]?.km ?? null);
+  const kmUltimo = ultimoEdits[eco] !== undefined ? ultimoEdits[eco] : (kmData[eco]?.kmUltimo ?? null);
   const tv = getTipoVehiculo(u);
 
   document.getElementById('modal-title').textContent = `Cotización — ${eco} (${u.modelo})`;
@@ -533,7 +594,7 @@ async function verCotizacion(eco, event) {
     return;
   }
 
-  const sem = calcSemaforo(km);
+  const sem = calcSemaforo(km, kmUltimo);
   const kmServicio = sem.proximo;
 
   try {
