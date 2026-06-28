@@ -536,9 +536,6 @@ body {
 </div><!-- /main -->
 
 <script>
-const IVA = 1.16;
-const MO_HR = 800;  // $800 precio final con IVA incluido
-
 // ── BASE DE DATOS DE UNIDADES ────────────────────────────────────────────
 const DB = {
   // HILUX
@@ -677,620 +674,105 @@ const DB = {
   'V-26': {marca:'Ram',modelo:'4000 Chassis',año:2024,motor:'5.7L Gasolina HEMI V8',placas:'JD-0402-A',vin:'3C7WRAKT5RG400841',color:'Blanco',grupo:'RAM4000'},
 };
 
-// ── TABULADORES DE SERVICIOS POR GRUPO ─────────────────────────────────
-// Precios ya con IVA incluido (costo × 1.65 × 1.16)
-// Basico = km impares (10,30,50,70,90) | Mayor = km pares (20,40,60,80,100)
-// MO real: $800 básico / $1,050 mayor (sin desglose de horas visible)
-// Filtro de aire/cabina inflados como margen de negociación (excepto Hilux que va a precio real)
-// Sin mención de "OEM" ni marcas comerciales en ningún componente
+// ── SUPABASE ─────────────────────────────────────────────────────────────
+const SUPABASE_URL      = 'https://bgpugtgjbfseqwwcwpyd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJncHVndGdqYmZzZXF3d2N3cHlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjM4MjEsImV4cCI6MjA5ODEzOTgyMX0.iYp-y00qYWv9uvJX73eAASeKy5qbonXN3Jbwd4qRxPM';
 
-function pv(costo){ return Math.round(costo * 1.65 * IVA * 100)/100; }
-
-const MO_BASICO_DISPLAY = Math.round(800 * 100)/100;
-const MO_MAYOR_DISPLAY  = Math.round(1050 * 100)/100;
-
-const SERVICIOS = {
-  HILUX: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CK-4', sub:'Drenado completo, limpieza de tapón de cárter, llenado y verificación de nivel', cant:6, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Filtración de partículas · Instalación con torque especificado', cant:1, precio: pv(165)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación de filtro, llenado, verificación de fugas y nivel final', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Revisión completa con reporte digital · Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CK-4', sub:'Drenado completo, limpieza de tapón de cárter', cant:6, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(165)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de caja de filtro y ductos de admisión', cant:1, precio: pv(450/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos de ventilación', cant:1, precio: pv(217/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, instalación de filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Revisión completa con reporte digital · Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  L200_4N16: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CK-4', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(176)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Revisión completa con reporte digital · Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CK-4', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(176)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de sistema de admisión', cant:1, precio: pv(237/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(428/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Revisión completa con reporte digital · Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  L200_4N15: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CK-4', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(176)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Revisión completa con reporte digital · Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CK-4', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(176)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de sistema de admisión', cant:1, precio: pv(237/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(428/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  L200_4D56: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CF-4', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(200)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CF-4', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(200)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de sistema de admisión', cant:1, precio: pv(237/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(428/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  TORNADO: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Gasolina API SP', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(120)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Gasolina API SP', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(120)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(172.69/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(298/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  NP300: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CK-4', sub:'Drenado completo y llenado', cant:8, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(150)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CK-4', sub:'Drenado completo y llenado', cant:8, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(150)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de ductos de admisión', cant:1, precio: pv(234/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(193/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  VW: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5W-40 Gasolina API SP/CF', sub:'Drenado completo y llenado', cant:4, precio: pv(155.10)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(151/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor_sin_bujia: [
-      {tipo:'ref', desc:'Aceite motor 5W-40 Gasolina API SP/CF', sub:'Drenado completo y llenado', cant:4, precio: pv(155.10)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(151/IVA)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(155/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(198/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor_con_bujia: [
-      {tipo:'ref', desc:'Aceite motor 5W-40 Gasolina API SP/CF', sub:'Drenado completo y llenado', cant:4, precio: pv(155.10)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(151/IVA)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(155/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(198/IVA)},
-      {tipo:'ref', desc:'Juego de bujías de encendido', sub:'Verificación de gap y torque especificado', cant:4, precio: pv(95)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo con cambio de bujías', sub:'Cambio de aceite, filtros, bujías y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY + 350},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  JAC: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CK-4', sub:'Drenado completo y llenado', cant:6, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(150)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Diesel API CK-4', sub:'Drenado completo y llenado', cant:6, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(150)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(479/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(450/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  RAM4000: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Gasolina API SP', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(180/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 5W-30 Gasolina API SP', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(180/IVA)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(480/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(440/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  HONDA_NEGRO: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 3.5L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(95/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 3.5L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(95/IVA)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(261/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(396/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  L_9: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5.3L Gasolina', sub:'Drenado completo y llenado', cant:8, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 5.3L Gasolina', sub:'Drenado completo y llenado', cant:8, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(331.18/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(210)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  TAHOE_2021: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 5.3L Gasolina', sub:'Drenado completo y llenado', cant:8, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 5.3L Gasolina', sub:'Drenado completo y llenado', cant:8, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(331.18/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(210)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  L_19: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 3.5L Gasolina', sub:'Drenado completo y llenado', cant:6, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(235)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 3.5L Gasolina', sub:'Drenado completo y llenado', cant:6, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(235)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(197/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(265)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  L_20: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 3.5L Gasolina', sub:'Drenado completo y llenado', cant:6, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(235)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 3.5L Gasolina', sub:'Drenado completo y llenado', cant:6, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(235)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(197/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(265)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  U_13: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 3.5L Gasolina', sub:'Drenado completo y llenado', cant:6.1, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(235)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 3.5L Gasolina', sub:'Drenado completo y llenado', cant:6.1, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(235)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(196.95/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(265)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  U_35: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 4.0L Gasolina', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 4.0L Gasolina', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(196.95/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(410)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  U_23: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 2.7L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 2.7L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(196.95/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  U_24: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 2.4L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 2.4L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  U_03: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 4.0L Gasolina', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 4.0L Gasolina', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  U_45: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 4.7L Gasolina', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 4.7L Gasolina', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(205)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  V_39: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 4.0L Gasolina', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 4.0L Gasolina', sub:'Drenado completo y llenado', cant:7, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(175)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(196.95/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  U_07: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 2.4L Gasolina', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(230)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 2.4L Gasolina', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(230)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(560)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  U_36: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 2.4L Gasolina', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 2.4L Gasolina', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(210)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  V_08: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 1.6L Gasolina', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 1.6L Gasolina', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(210)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(295)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  V_23: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 2.5L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 2.5L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(225)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(175)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  U_25: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 1.6L Gasolina', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 1.6L Gasolina', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(245)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(185)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  V_49: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 2.0L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 2.0L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(210)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(185)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  U_17: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 1.1L Gasolina', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 1.1L Gasolina', sub:'Drenado completo y llenado', cant:4, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(275)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(210)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  ALTIMA: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 2.5L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 2.5L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(195)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(245)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(230)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-  V_28: {
-    basico: [
-      {tipo:'ref', desc:'Aceite motor 3.6L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(225)},
-      {tipo:'mo',  desc:'Mano de obra — Cambio de aceite y filtro', sub:'Drenado, instalación, verificación de fugas', cant:1, precio: MO_BASICO_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ],
-    mayor: [
-      {tipo:'ref', desc:'Aceite motor 3.6L Gasolina', sub:'Drenado completo y llenado', cant:5, precio: pv(126.72)},
-      {tipo:'ref', desc:'Filtro de aceite de alta filtración', sub:'Instalación con torque especificado', cant:1, precio: pv(225)},
-      {tipo:'ref', desc:'Filtro de aire de motor de alta eficiencia', sub:'Inspección de admisión', cant:1, precio: pv(360/IVA)},
-      {tipo:'ref', desc:'Filtro de habitáculo / cabina A/C', sub:'Inspección de conductos', cant:1, precio: pv(275/IVA)},
-      {tipo:'mo',  desc:'Mano de obra — Servicio completo', sub:'Cambio de aceite, filtros y revisión de sistemas', cant:1, precio: MO_MAYOR_DISPLAY},
-      {tipo:'cor', desc:'Inspección de 60+ puntos con semáforo + Escaneo OBD-II', sub:'Sin costo adicional', cant:1, precio:0},
-    ]
-  },
-};
-
-// KMs básicos vs mayores
-// Info de combustible y bujías por grupo — para servicios de oportunidad en 60k/100k
-// costoBujias = SOLO mano de obra (según si requiere remover múltiple)
-// numBujias = cantidad real de piezas (1 por cilindro en la mayoría; HEMI V8 usa 2 por cilindro = 16)
-// precioBujiaUnit = costo de refacción por pieza (NGK, ref. $299.83 c/u confirmado en juego Honda V6 6pzas=$1,799)
-const PRECIO_BUJIA_NGK = 212.12; // → precio GAGA ≈ $350 c/u (212.12 × 1.65 = $350)
-const GASOLINA_INFO = {
-  TORNADO:  { gasolina: true, numBujias: 4,  costoBujias: 350,  notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  VW:       { gasolina: true, numBujias: 4,  costoBujias: 350,  notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  RAM4000:  { gasolina: true, numBujias: 16, costoBujias: 1200, notaBujia: 'Bujías de encendido (V8 HEMI, 2 por cilindro = 16 piezas, requiere remover múltiple de admisión)' },
-  HILUX:      { gasolina: false },
-  L200_4N16:  { gasolina: false },
-  L200_4N15:  { gasolina: false },
-  L200_4D56:  { gasolina: false },
-  NP300:      { gasolina: false },
-  JAC:        { gasolina: false },
-  HONDA_NEGRO: { gasolina: true, numBujias: 6,  costoBujias: 1200, notaBujia: 'Bujías de encendido (V6, 6 piezas, 3 traseras requieren remover múltiple de admisión)' },
-  L_9: { gasolina: true, numBujias: 8,  costoBujias: 800, notaBujia: 'Bujías de encendido (V8, 8 piezas, acceso directo, sin remover múltiple)' },
-  TAHOE_2021: { gasolina: true, numBujias: 8,  costoBujias: 800, notaBujia: 'Bujías de encendido (V8, 8 piezas, acceso directo, sin remover múltiple)' },
-  L_19: { gasolina: true, numBujias: 6,  costoBujias: 800, notaBujia: 'Bujías de encendido (V6, 6 piezas, confirmado sin remover múltiple)' },
-  L_20: { gasolina: true, numBujias: 6,  costoBujias: 800, notaBujia: 'Bujías de encendido (V6, 6 piezas, confirmado sin remover múltiple)' },
-  U_13: { gasolina: true, numBujias: 6,  costoBujias: 800, notaBujia: 'Bujías de encendido (V6, 6 piezas, confirmado sin remover múltiple)' },
-  U_35: { gasolina: true, numBujias: 6,  costoBujias: 1200, notaBujia: 'Bujías de encendido (V6, 6 piezas, 3 traseras requieren remover múltiple de admisión)' },
-  U_23: { gasolina: true, numBujias: 4,  costoBujias: 350, notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  U_24: { gasolina: true, numBujias: 4,  costoBujias: 350, notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  U_03: { gasolina: true, numBujias: 6,  costoBujias: 1200, notaBujia: 'Bujías de encendido (6 cil. en línea, 6 piezas, requiere remover múltiple de admisión)' },
-  U_45: { gasolina: true, numBujias: 8,  costoBujias: 1200, notaBujia: 'Bujías de encendido (V8, 8 piezas, requiere remover múltiple de admisión)' },
-  V_39: { gasolina: true, numBujias: 6,  costoBujias: 1200, notaBujia: 'Bujías de encendido (V6, 6 piezas, 3 traseras requieren remover múltiple de admisión)' },
-  U_07: { gasolina: true, numBujias: 4,  costoBujias: 350, notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  U_36: { gasolina: true, numBujias: 4,  costoBujias: 350, notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  V_08: { gasolina: true, numBujias: 4,  costoBujias: 350, notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  V_23: { gasolina: true, numBujias: 4,  costoBujias: 350, notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  U_25: { gasolina: true, numBujias: 4,  costoBujias: 350, notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  V_49: { gasolina: true, numBujias: 4,  costoBujias: 350, notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  U_17: { gasolina: true, numBujias: 4,  costoBujias: 350, notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  ALTIMA: { gasolina: true, numBujias: 4,  costoBujias: 350, notaBujia: 'Bujías de encendido (4 cil., acceso directo, sin remover múltiple)' },
-  V_28: { gasolina: true, numBujias: 6,  costoBujias: 1200, notaBujia: 'Bujías de encendido (V6 Pentastar, 6 piezas, banco izquierdo requiere remover múltiple de admisión)' },
-};
-
-const KM_OPORTUNIDAD_GASOLINA = [60000, 100000]; // km donde se muestran servicios de oportunidad en gasolina
-
-
-const KM_BASICO = [10000,30000,50000,70000,90000];
-const KM_MAYOR  = [20000,40000,60000,80000,100000];
-const KM_BUJIA_VW = [60000,100000]; // VW solo cambia bujías en estos KM
-
-function fmt(n){
-  return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+// ── MAPEO GRUPO → TIPO_VEHICULO EN SUPABASE ──────────────────────────────
+function getTipoVehiculo(vehiculo) {
+  const g = vehiculo.grupo;
+  const m = vehiculo.modelo || '';
+  // Casos con override por modelo
+  if (g === 'NP300') return (m.includes('NV350') || m.includes('Urvan')) ? 'Nissan Urvan NV350 Diesel' : 'Nissan NP300 Diesel';
+  if (g === 'VW')    return m.includes('Robust') ? 'VW Robust Gasolina' : 'VW Saveiro Gasolina';
+  if (g === 'HILUX' && (m.includes('Hiace') || m.includes('Commuter'))) return 'Toyota Hiace Commuter Diesel';
+  const MAP = {
+    HILUX:       'Toyota Hilux SRV Diesel',
+    L200_4N16:   'Mitsubishi L200 Diesel',
+    L200_4N15:   'Mitsubishi L200 Diesel',
+    L200_4D56:   'Mitsubishi L200 Diesel',
+    JAC:         'JAC Sunray Diesel',
+    TORNADO:     'Chevrolet Tornado Gasolina',
+    RAM4000:     'Ram 4000 Gasolina',
+    V_28:        'Ram ProMaster 2500 Gasolina',
+    V_39:        'Toyota 4Runner TRD Sport Gasolina',
+    L_19:        'Ford F-150 Raptor Gasolina',
+    L_20:        'Ford F-150 Tremor Gasolina',
+    U_13:        'Toyota Tacoma TRD Sport Gasolina',
+    U_35:        'Toyota Tacoma TRD Sport Gasolina',
+    U_23:        'Toyota Tacoma PreRunner Gasolina',
+    U_24:        'Toyota Tacoma Pickup Gasolina',
+    U_03:        'Toyota Land Cruiser FJ80 Gasolina',
+    U_45:        'Toyota Sequoia SR5 Gasolina',
+    TAHOE_2021:  'Chevrolet Tahoe LTZ Gasolina',
+    L_9:         'Chevrolet Tahoe Premier Gasolina',
+    U_07:        'Nissan Frontier D22 Gasolina',
+    U_36:        'Nissan King Cab D21 Gasolina',
+    ALTIMA:      'Nissan Altima SL Gasolina',
+    V_08:        'Nissan Versa Advance Gasolina',
+    V_23:        'Nissan X-Trail Advance Gasolina',
+    V_49:        'Kia Forte LX Gasolina',
+    U_25:        'Kia Rio LX Gasolina',
+    HONDA_NEGRO: 'Honda Accord EX-L Gasolina',
+    U_17:        'Hyundai i10 GLS Gasolina',
+  };
+  return MAP[g] || null;
 }
 
-function calcularTotalKm(grupo, km) {
-  const grp = SERVICIOS[grupo];
-  if (!grp) return null;
-  let items;
-  if (grupo === 'VW') {
-    if (KM_BASICO.includes(km)) items = grp.basico;
-    else if (KM_BUJIA_VW.includes(km)) items = grp.mayor_con_bujia;
-    else items = grp.mayor_sin_bujia;
-  } else {
-    items = KM_MAYOR.includes(km) ? grp.mayor : grp.basico;
-  }
+// ── CACHÉ DE PRECIOS ─────────────────────────────────────────────────────
+const _preciosCache = {};
 
-  // Misma lógica que actualizar(): gasolina en 60k/100k suma bujías + cuerpo de aceleración
-  const info = GASOLINA_INFO[grupo];
-  const esKmBujiaGasolina = info && info.gasolina && KM_OPORTUNIDAD_GASOLINA.includes(km);
-  if (esKmBujiaGasolina && grupo !== 'VW') {
-    items = items.concat([
-      {precio: pv(PRECIO_BUJIA_NGK/IVA), cant: info.numBujias},
-      {precio: info.costoBujias, cant:1},
-      {precio: 450, cant:1},
-    ]);
-  } else if (esKmBujiaGasolina && grupo === 'VW') {
-    items = items.concat([
-      {precio: 450, cant:1},
-    ]);
-  }
-
-  let total = 0;
-  items.forEach(i => total += i.precio * i.cant);
-  return Math.round(total * 100) / 100;
+async function fetchPrecios(tipoVehiculo) {
+  if (_preciosCache[tipoVehiculo]) return _preciosCache[tipoVehiculo];
+  const resp = await fetch(
+    `${SUPABASE_URL}/rest/v1/precios_gaga?tipo_vehiculo=eq.${encodeURIComponent(tipoVehiculo)}&order=km_intervalo.asc`,
+    { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+  );
+  if (!resp.ok) throw new Error(`Supabase ${resp.status}: ${await resp.text()}`);
+  const data = await resp.json();
+  _preciosCache[tipoVehiculo] = data;
+  return data;
 }
 
-function poblarSelectKm(grupoId) {
+
+// ── FORMATEADOR ─────────────────────────────────────────────────────────
+function fmt(n) {
+  return '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ── SELECTOR DE KM CON TOTALES ───────────────────────────────────────────
+function poblarSelectKm(rows) {
   const sel = document.getElementById('sel-km');
   const kmActual = parseInt(sel.value) || 10000;
-  const kms = [10000,20000,30000,40000,50000,60000,70000,80000,90000,100000];
+  const kms = [10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000];
   sel.innerHTML = '';
   kms.forEach(km => {
-    const total = calcularTotalKm(grupoId, km);
-    const kmFmt = km.toLocaleString('es-MX');
-    const totalFmt = total ? ' — $' + total.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
-    const opt = document.createElement('option');
-    opt.value = km;
-    opt.textContent = kmFmt + ' KM' + totalFmt;
+    const kmRows = rows.filter(r => r.km_intervalo === km);
+    const total  = Math.round(kmRows.reduce((s, r) => s + (r.total || 0), 0) * 100) / 100;
+    const kmFmt  = km.toLocaleString('es-MX');
+    const tFmt   = total > 0 ? ' — $' + total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+    const opt    = document.createElement('option');
+    opt.value    = km;
+    opt.textContent = kmFmt + ' KM' + tFmt;
     if (km === kmActual) opt.selected = true;
     sel.appendChild(opt);
   });
 }
 
-function actualizar(){
+// ── ACTUALIZAR ───────────────────────────────────────────────────────────
+async function actualizar() {
   const eco = document.getElementById('sel-eco').value;
-  const km  = parseInt(document.getElementById('sel-km').value);
+  const km  = parseInt(document.getElementById('sel-km').value) || 10000;
   const u   = DB[eco];
-
-  // Actualizar dropdown de KM con precios para esta unidad
-  if (u) poblarSelectKm(u.grupo);
 
   document.getElementById('pendiente-box').style.display = 'none';
 
-  if(!u){
+  if (!u) {
     document.getElementById('total-display').textContent = '—';
     return;
   }
 
-  // Datos unidad
+  // Datos de la unidad
   document.getElementById('u-eco').textContent    = eco;
   document.getElementById('u-marca').textContent  = u.marca;
   document.getElementById('u-modelo').textContent = u.modelo;
@@ -1300,109 +782,97 @@ function actualizar(){
   document.getElementById('u-vin').textContent    = u.vin;
   document.getElementById('u-color').textContent  = u.color;
 
-  // Badge de combustible (gasolina/diesel) junto al económico
-  const fuelBadge = document.getElementById('u-combustible-badge');
-  const grupoInfo = GASOLINA_INFO[u.grupo];
-  const esGasolina = grupoInfo && grupoInfo.gasolina;
-  fuelBadge.textContent = esGasolina ? 'Gasolina' : 'Diésel';
-  fuelBadge.className = 'fuel-badge ' + (esGasolina ? 'gasolina' : 'diesel');
+  const tv         = getTipoVehiculo(u);
+  const esGasolina = tv ? tv.includes('Gasolina') : false;
 
-  // Servicios
-  const grp = SERVICIOS[u.grupo];
-  if(!grp){
-    document.getElementById('pendiente-box').style.display = 'block';
-    document.getElementById('total-display').textContent = '—';
-    document.getElementById('tbl-body').innerHTML = '';
-    document.getElementById('tbl-foot').innerHTML = '';
+  // Badge combustible
+  const fuelBadge = document.getElementById('u-combustible-badge');
+  fuelBadge.textContent = esGasolina ? 'Gasolina' : 'Diésel';
+  fuelBadge.className   = 'fuel-badge ' + (esGasolina ? 'gasolina' : 'diesel');
+
+  if (!tv) {
+    document.getElementById('pendiente-box').style.display  = 'block';
+    document.getElementById('total-display').textContent    = '—';
+    document.getElementById('tbl-body').innerHTML           = '';
+    document.getElementById('tbl-foot').innerHTML           = '';
+    document.getElementById('card-oportunidad').style.display = 'none';
     return;
   }
 
-  const esMayor = KM_MAYOR.includes(km);
-  let items;
+  // Loading state
+  document.getElementById('tbl-body').innerHTML =
+    '<tr><td colspan="4" style="text-align:center;padding:20px;color:#888">Cargando…</td></tr>';
+  document.getElementById('tbl-foot').innerHTML = '';
+  document.getElementById('total-display').textContent = '—';
 
-  if (u.grupo === 'VW') {
-    if (!esMayor) {
-      items = grp.basico;
-    } else if (KM_BUJIA_VW.includes(km)) {
-      items = grp.mayor_con_bujia;
-    } else {
-      items = grp.mayor_sin_bujia;
+  try {
+    const rows = await fetchPrecios(tv);
+
+    // Poblar km selector con totales
+    poblarSelectKm(rows);
+    const kmSel = parseInt(document.getElementById('sel-km').value) || km;
+
+    const kmItems = rows.filter(r => r.km_intervalo === kmSel);
+    const kmLabel = kmSel.toLocaleString('es-MX') + ' KM';
+    document.getElementById('total-km-lbl').textContent = kmLabel;
+    document.getElementById('desglose-hdr').textContent = `Desglose del servicio — ${kmLabel}`;
+
+    if (kmItems.length === 0) {
+      document.getElementById('tbl-body').innerHTML =
+        '<tr><td colspan="4" style="text-align:center;padding:20px;color:#888">Sin datos para este kilometraje</td></tr>';
+      document.getElementById('card-oportunidad').style.display = 'none';
+      return;
     }
-  } else {
-    items = esMayor ? grp.mayor : grp.basico;
-  }
 
-  // ── GASOLINA en 60k/100k: bujías + cuerpo de aceleración SE SUMAN al total ──
-  const info = GASOLINA_INFO[u.grupo];
-  const esKmBujiaGasolina = info && info.gasolina && KM_OPORTUNIDAD_GASOLINA.includes(km);
-  if (esKmBujiaGasolina && u.grupo !== 'VW') {
-    // VW ya maneja sus propias bujías vía mayor_con_bujia; para el resto, agregamos aquí
-    items = items.concat([
-      {tipo:'ref', desc:'Juego de bujías de encendido', sub: info.notaBujia, cant: info.numBujias, precio: pv(PRECIO_BUJIA_NGK/IVA)},
-      {tipo:'mo', desc:'Mano de obra — Cambio de bujías', sub:'Servicio incluido en este kilometraje', cant:1, precio: info.costoBujias},
-      {tipo:'mo', desc:'Mano de obra — Lavado de cuerpo de aceleración', sub:'Limpieza profunda del cuerpo de aceleración', cant:1, precio: 450},
-    ]);
-  } else if (esKmBujiaGasolina && u.grupo === 'VW') {
-    // VW: las bujías ya están en mayor_con_bujia, solo agregar cuerpo de aceleración
-    items = items.concat([
-      {tipo:'mo', desc:'Mano de obra — Lavado de cuerpo de aceleración', sub:'Limpieza profunda del cuerpo de aceleración', cant:1, precio: 450},
-    ]);
-  }
+    let total     = 0;
+    let tableRows = '';
 
-  let total = 0;
-  let rows  = '';
-
-  const kmLabel = km.toLocaleString('es-MX')+' KM';
-  document.getElementById('total-km-lbl').textContent  = kmLabel;
-  document.getElementById('desglose-hdr').textContent  = `Desglose del servicio — ${kmLabel}`;
-
-  items.forEach(item => {
-    const sub = Math.round(item.precio * item.cant * 100)/100;
-    total += sub;
-
-    const bdg = item.tipo==='ref' ? '<span class="badge badge-ref">Refacción</span>' :
-                item.tipo==='mo'  ? '<span class="badge badge-mo">Mano de obra</span>' :
-                                    '<span class="badge badge-cor">Cortesía</span>';
-    const pFmt = item.precio>0 ? fmt(item.precio) : '<span class="gratis">Incluido</span>';
-    const sFmt = sub>0 ? fmt(sub) : '<span class="gratis">—</span>';
-
-    rows += `<tr>
-      <td>
-        ${bdg}
-        <div class="desc-main">${item.desc}</div>
-        <div class="desc-sub">${item.sub}</div>
-      </td>
-      <td style="text-align:center">${item.cant}</td>
-      <td style="text-align:right">${pFmt}</td>
-      <td>${sFmt}</td>
-    </tr>`;
-  });
-
-  document.getElementById('tbl-body').innerHTML = rows;
-
-  const totalRnd = Math.round(total*100)/100;
-  document.getElementById('tbl-foot').innerHTML =
-    `<tr><td colspan="3" style="text-align:right">TOTAL CON IVA INCLUIDO</td><td>${fmt(totalRnd)}</td></tr>`;
-
-  document.getElementById('total-display').textContent = fmt(totalRnd);
-
-  // ── PROPUESTA ADICIONAL (solo gasolina, 60k/100k): lavado de inyectores ──
-  const cardOp = document.getElementById('card-oportunidad');
-  if (esKmBujiaGasolina) {
-    const opItems = [
-      { desc: 'Lavado de inyectores con boya', precio: 650 },
-    ];
-    let opRows = '';
-    opItems.forEach(op => {
-      opRows += `<tr>
-        <td><div class="desc-main" style="font-size:12px">${op.desc}</div></td>
-        <td style="text-align:right;font-weight:bold;color:#8B4513">${fmt(op.precio)}</td>
+    kmItems.forEach(item => {
+      const sub   = Math.round((item.total || 0) * 100) / 100;
+      total      += sub;
+      const tipo  = item.tipo || '';
+      const bdg   = tipo === 'Refacción'    ? '<span class="badge badge-ref">Refacción</span>'  :
+                    tipo === 'Mano de obra' ? '<span class="badge badge-mo">Mano de obra</span>' :
+                                             '<span class="badge badge-cor">Cortesía</span>';
+      const pFmt  = (item.precio_unitario || 0) > 0 ? fmt(item.precio_unitario) : '<span class="gratis">Incluido</span>';
+      const sFmt  = sub > 0 ? fmt(sub) : '<span class="gratis">—</span>';
+      tableRows += `<tr>
+        <td>
+          ${bdg}
+          <div class="desc-main">${item.descripcion}</div>
+          <div class="desc-sub">${item.descripcion_sub || ''}</div>
+        </td>
+        <td style="text-align:center">${item.cantidad}</td>
+        <td style="text-align:right">${pFmt}</td>
+        <td>${sFmt}</td>
       </tr>`;
     });
-    document.getElementById('tbl-oportunidad-body').innerHTML = opRows;
-    cardOp.style.display = 'block';
-  } else {
-    cardOp.style.display = 'none';
+
+    document.getElementById('tbl-body').innerHTML = tableRows;
+
+    const totalRnd = Math.round(total * 100) / 100;
+    document.getElementById('tbl-foot').innerHTML =
+      `<tr><td colspan="3" style="text-align:right">TOTAL CON IVA INCLUIDO</td><td>${fmt(totalRnd)}</td></tr>`;
+    document.getElementById('total-display').textContent = fmt(totalRnd);
+
+    // Propuesta adicional: lavado de inyectores (solo gasolina en 60k/100k)
+    const cardOp          = document.getElementById('card-oportunidad');
+    const esKmOportunidad = [60000, 100000].includes(kmSel);
+    if (esGasolina && esKmOportunidad) {
+      document.getElementById('tbl-oportunidad-body').innerHTML = `<tr>
+        <td><div class="desc-main" style="font-size:12px">Lavado de inyectores con boya</div></td>
+        <td style="text-align:right;font-weight:bold;color:#8B4513">${fmt(650)}</td>
+      </tr>`;
+      cardOp.style.display = 'block';
+    } else {
+      cardOp.style.display = 'none';
+    }
+
+  } catch (err) {
+    console.error('Error al cargar precios:', err);
+    document.getElementById('tbl-body').innerHTML =
+      '<tr><td colspan="4" style="text-align:center;padding:20px;color:#c00">Error al cargar precios. Verifica tu conexión.</td></tr>';
+    document.getElementById('total-display').textContent = '—';
   }
 }
 
