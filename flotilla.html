@@ -444,6 +444,25 @@ function onKmInput(input, eco) {
     input.classList.remove('changed');
   }
   document.getElementById('btn-guardar').disabled = Object.keys(kmEdits).length === 0;
+  actualizarContadores();
+}
+
+function actualizarContadores() {
+  let r=0, a=0, v=0, g=0, t=0;
+  Object.entries(DB).forEach(([eco, u]) => {
+    const km = kmEdits[eco] !== undefined ? kmEdits[eco] : (kmData[eco]?.km ?? null);
+    t++;
+    if (km === null || km === 0) { g++; return; }
+    const sem = calcSemaforo(km);
+    if (sem.clase==='s-rojo') r++;
+    else if (sem.clase==='s-amarillo') a++;
+    else v++;
+  });
+  document.getElementById('cnt-rojo').textContent = r;
+  document.getElementById('cnt-amarillo').textContent = a;
+  document.getElementById('cnt-verde').textContent = v;
+  document.getElementById('cnt-gris').textContent = g;
+  document.getElementById('cnt-total').textContent = t;
 }
 
 // ── KM CHANGE (al salir del campo) ───────────────────────────────────────
@@ -464,12 +483,12 @@ async function guardarTodos() {
   let ok = 0, err = 0;
 
   for (const [eco, km] of entries) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/kilometrajes`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/kilometrajes?on_conflict=eco`, {
       method: 'POST',
-      headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' },
+      headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
       body: JSON.stringify({ eco, km_actual: km, fecha_captura: new Date().toISOString() })
     });
-    if (r.ok || r.status === 201 || r.status === 200) {
+    if (r.ok || r.status === 201 || r.status === 204) {
       kmData[eco] = { km, fecha: new Date().toISOString() };
       ok++;
     } else { err++; }
