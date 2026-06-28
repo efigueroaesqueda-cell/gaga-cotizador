@@ -404,10 +404,10 @@ function renderTabla() {
     html += `<tr class="${pendiente}" data-eco="${eco}">
       <td><span class="eco">${eco}</span></td>
       <td><div class="modelo">${u.modelo} <span style="color:#666;font-size:10px">${u.año}</span></div><div class="placa">${u.placas}</div></td>
-      <td><input class="km-input${changed}" type="number" min="0" step="1000" value="${kmVal}" placeholder="0" data-eco="${eco}" onchange="onKmChange('${eco}',this.value)" oninput="onKmChange('${eco}',this.value)"></td>
-      <td>${proxHtml}</td>
-      <td>${restHtml}</td>
-      <td>${semHtml}</td>
+      <td><input class="km-input${changed}" type="number" min="0" max="999999" step="1" value="${kmVal}" placeholder="—" data-eco="${eco}" onchange="onKmChange('${eco}',this.value)" oninput="onKmInput(this,'${eco}')"></td>
+      <td class="cel-proximo">${proxHtml}</td>
+      <td class="cel-restante">${restHtml}</td>
+      <td class="cel-sem">${semHtml}</td>
       <td><button class="btn-cot" onclick="verCotizacion('${eco}',event)">Ver cotización →</button></td>
     </tr>`;
   });
@@ -420,16 +420,38 @@ function renderTabla() {
   document.getElementById('cnt-total').textContent = cntTotal;
 }
 
-// ── KM CHANGE ────────────────────────────────────────────────────────────
-function onKmChange(eco, val) {
-  const n = parseInt(val);
-  if (!isNaN(n) && n >= 0) {
+// ── KM INPUT en vivo (no re-renderiza la tabla, solo actualiza la fila) ──
+function onKmInput(input, eco) {
+  const n = parseInt(input.value);
+  const tr = input.closest('tr');
+  if (!tr) return;
+
+  if (!isNaN(n) && n > 0) {
     kmEdits[eco] = n;
+    const sem = calcSemaforo(n);
+    const colorMap = {'s-rojo':'#e74c3c','s-amarillo':'#f39c12','s-verde':'#2ecc71'};
+    tr.querySelector('.cel-proximo').innerHTML = fmtKm(sem.proximo);
+    tr.querySelector('.cel-restante').innerHTML = `<span class="restante" style="color:${colorMap[sem.clase]||'#aaa'}">${fmtKm(sem.restante)}</span>`;
+    tr.querySelector('.cel-sem').innerHTML = `<span class="semaforo ${sem.clase}">${sem.label}</span>`;
+    tr.classList.add('pendiente');
+    input.classList.add('changed');
   } else {
     delete kmEdits[eco];
+    tr.querySelector('.cel-proximo').innerHTML = '<span style="color:#555">—</span>';
+    tr.querySelector('.cel-restante').innerHTML = '<span style="color:#555">—</span>';
+    tr.querySelector('.cel-sem').innerHTML = '<span class="semaforo s-gris">Sin registro</span>';
+    tr.classList.remove('pendiente');
+    input.classList.remove('changed');
   }
   document.getElementById('btn-guardar').disabled = Object.keys(kmEdits).length === 0;
-  renderTabla();
+}
+
+// ── KM CHANGE (al salir del campo) ───────────────────────────────────────
+function onKmChange(eco, val) {
+  const n = parseInt(val);
+  if (!isNaN(n) && n > 0) kmEdits[eco] = n;
+  else delete kmEdits[eco];
+  document.getElementById('btn-guardar').disabled = Object.keys(kmEdits).length === 0;
 }
 
 // ── GUARDAR ──────────────────────────────────────────────────────────────
