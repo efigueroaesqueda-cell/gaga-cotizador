@@ -13,7 +13,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#1a1a1a;color:#eee;min-h
 .hdr-title{font-size:17px;font-weight:700;color:#c8a951;letter-spacing:.4px}
 .hdr-sub{font-size:11px;color:#666;margin-top:2px}
 .hdr-nav{display:flex;gap:8px;margin-left:auto;align-items:center}
-.nav-btn{display:inline-flex;align-items:center;gap:7px;text-decoration:none;padding:9px 20px;border-radius:22px;font-size:13px;font-weight:600;letter-spacing:.3px;transition:all .2s;white-space:nowrap}
+.nav-btn{display:inline-flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;padding:7px 18px;border-radius:22px;font-size:13px;font-weight:600;letter-spacing:.3px;transition:all .2s;white-space:nowrap;line-height:1.2}
+.nav-btn small{font-size:9px;font-weight:400;opacity:.55;letter-spacing:.2px}
 .nav-btn-ghost{color:#aaa;border:1px solid #333;background:transparent}
 .nav-btn-ghost:hover{color:#fff;border-color:#666;background:#1e1e1e;transform:translateY(-1px)}
 .nav-btn-gold{color:#111;background:linear-gradient(135deg,#c8a951,#a07820);border:1px solid transparent}
@@ -198,10 +199,10 @@ td{padding:9px 12px;vertical-align:middle}
     </div>
   </div>
   <nav class="hdr-nav">
-    <a href="bienvenida.html" class="nav-btn nav-btn-ghost">🏠 Inicio</a>
-    <a href="flotilla.html" class="nav-btn nav-btn-ghost">🚛 Portal Flotilla</a>
-    <span class="nav-btn nav-btn-active">📊 Proyección</span>
-    <a href="index.html" class="nav-btn nav-btn-gold">🧮 Cotizador</a>
+    <a href="bienvenida.html" class="nav-btn nav-btn-ghost">🏠 Inicio<small>Pantalla principal</small></a>
+    <a href="flotilla.html" class="nav-btn nav-btn-ghost">🚛 Portal Flotilla<small>Estado de la flota</small></a>
+    <span class="nav-btn nav-btn-active">📊 Proyección<small>Módulo actual</small></span>
+    <a href="index.html" class="nav-btn nav-btn-gold">🧮 Cotizador<small>Genera cotizaciones</small></a>
   </nav>
 </div>
 
@@ -668,7 +669,9 @@ function toggleDemo() {
   recalcular();
 }
 
-init();
+init().then(()=>{
+  if(new URLSearchParams(location.search).get('demo')==='1') toggleDemo();
+});
 
 // ── SIDE PANEL ────────────────────────────────────────────────────────────
 function fmtKm(n){ return n.toLocaleString('es-MX')+' KM'; }

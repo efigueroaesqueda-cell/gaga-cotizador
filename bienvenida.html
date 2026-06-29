@@ -284,6 +284,21 @@ function loop(){
 }
 loop();
 
+// ── DEMO PARAM ──────────────────────────────────────────────────────────
+const _demo = new URLSearchParams(location.search).get('demo')==='1';
+if(_demo){
+  // propagar ?demo=1 a los links de módulos
+  ['c1','c2','c3'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.href = el.href + '?demo=1';
+  });
+  // mostrar badge demo en bienvenida
+  document.addEventListener('DOMContentLoaded',()=>{
+    const b = document.querySelector('.badge-flotilla');
+    if(b) b.insertAdjacentHTML('afterend','<div style="margin-top:8px;font-size:10px;color:#c8a951;letter-spacing:1px;opacity:.7">▶ MODO DEMO ACTIVO</div>');
+  });
+}
+
 // ── TRANSICIÓN ──────────────────────────────────────────────────────────
 function entrar(){
   document.getElementById('welcome').classList.add('oculto');
