@@ -18,6 +18,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#1a1a1a;color:#eee;min-h
 .nav-btn-ghost:hover{color:#fff;border-color:#666;background:#1e1e1e;transform:translateY(-1px)}
 .nav-btn-gold{color:#111;background:linear-gradient(135deg,#c8a951,#a07820);border:1px solid transparent}
 .nav-btn-gold:hover{background:linear-gradient(135deg,#d9ba62,#b08830);box-shadow:0 4px 18px rgba(200,169,81,.4);transform:translateY(-1px)}
+.nav-btn-active{color:#c8a951;border:1px solid #c8a951;background:rgba(200,169,81,.08);cursor:default;pointer-events:none}
 /* CONTROLES */
 .controles{padding:16px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:#111;border-bottom:1px solid #2a2a2a}
 .ctrl-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
@@ -199,6 +200,7 @@ td{padding:9px 12px;vertical-align:middle}
   <nav class="hdr-nav">
     <a href="bienvenida.html" class="nav-btn nav-btn-ghost">🏠 Inicio</a>
     <a href="flotilla.html" class="nav-btn nav-btn-ghost">🚛 Portal Flotilla</a>
+    <span class="nav-btn nav-btn-active">📊 Proyección</span>
     <a href="index.html" class="nav-btn nav-btn-gold">🧮 Cotizador</a>
   </nav>
 </div>
