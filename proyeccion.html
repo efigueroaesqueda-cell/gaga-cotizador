@@ -30,20 +30,31 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#1a1a1a;color:#eee;min-h
 .res-card.verde{border-color:#2ecc71}
 .res-card.total{border-color:#c8a951}
 .res-titulo{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.res-num{font-size:26px;font-weight:700;color:#fff}
+.res-num{font-size:48px;font-weight:800;color:#fff;line-height:1;letter-spacing:-1px}
 .res-card.rojo .res-num{color:#e74c3c}
 .res-card.amarillo .res-num{color:#f39c12}
 .res-card.verde .res-num{color:#2ecc71}
-.res-card.total .res-num{color:#c8a951}
-.res-sub{font-size:12px;color:#666;margin-top:4px}
-.res-monto{font-size:14px;font-weight:700;margin-top:8px}
+.res-card.total .res-num{color:#c8a951;font-size:38px}
+.res-sub{font-size:12px;color:#666;margin-top:6px}
+.res-monto{font-size:16px;font-weight:700;margin-top:10px}
 .res-card.rojo .res-monto{color:#e74c3c}
 .res-card.amarillo .res-monto{color:#f39c12}
 .res-card.verde .res-monto{color:#aaa}
 .res-card.total .res-monto{color:#c8a951}
 /* PERÍODOS */
 .periodos{padding:0 24px 20px;display:flex;gap:12px;flex-wrap:wrap}
-.periodo-card{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:14px 18px;flex:1;min-width:200px}
+.periodo-card{background:#1e1e1e;border:2px solid #2a2a2a;border-radius:8px;padding:14px 18px;flex:1;min-width:180px;cursor:pointer;transition:border-color .2s,background .2s,transform .15s;user-select:none}
+.periodo-card:hover{background:#252525;transform:translateY(-2px)}
+.periodo-card.activo{background:#1a1500;transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.periodo-card.activo-rojo{border-color:#e74c3c;background:#1a0808}
+.periodo-card.activo-naranja{border-color:#f39c12;background:#1a1000}
+.periodo-card.activo-verde{border-color:#2ecc71;background:#081a0a}
+.periodo-card.activo-azul{border-color:#7ec8e3;background:#08101a}
+.periodo-card.activo-gris{border-color:#888;background:#141414}
+.periodo-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.06);margin-bottom:8px}
+.reset-filtro{display:none;background:transparent;border:1px solid #444;color:#888;font-size:11px;padding:4px 12px;border-radius:12px;cursor:pointer;margin-left:auto}
+.reset-filtro.visible{display:inline-flex;align-items:center;gap:5px}
+.reset-filtro:hover{border-color:#aaa;color:#eee}
 .periodo-titulo{font-size:11px;color:#c8a951;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:10px}
 .periodo-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #222;font-size:12px}
 .periodo-row:last-child{border-bottom:none;font-weight:700;font-size:13px;padding-top:8px}
@@ -210,7 +221,10 @@ td{padding:9px 12px;vertical-align:middle}
 
 <!-- TABLA DETALLE -->
 <div class="seccion">
-  <div class="seccion-title">📋 Detalle por unidad — ordenado por urgencia</div>
+  <div class="seccion-title" style="justify-content:space-between">
+    <span>📋 Detalle por unidad — <span id="filtro-label">ordenado por urgencia</span></span>
+    <button class="reset-filtro" id="btn-reset-filtro" onclick="resetFiltro()">✕ Quitar filtro</button>
+  </div>
   <table id="tbl">
     <thead>
       <tr>
@@ -546,29 +560,63 @@ function renderResumen(unidades, kmDia) {
     </div>`;
 }
 
-function renderPeriodos(unidades, kmDia) {
-  const periodos = [
-    { label:'Hoy (vencidas)',    min:-Infinity, max:0,    color:'#e74c3c' },
-    { label:'7 días',            min:0,         max:7,    color:'#f39c12' },
-    { label:'15 días',           min:7,         max:15,   color:'#f39c12' },
-    { label:'30 días',           min:15,        max:30,   color:'#2ecc71' },
-    { label:'60 días',           min:30,        max:60,   color:'#7ec8e3' },
-    { label:'Más de 60 días',    min:60,        max:Infinity, color:'#666' },
-  ];
+const PERIODOS_DEF = [
+  { key:'hoy',    label:'HOY (Vencidas)',  min:-Infinity, max:0,    color:'#e74c3c', activeCls:'activo-rojo'   },
+  { key:'7d',     label:'7 Días',          min:0,         max:7,    color:'#f39c12', activeCls:'activo-naranja'},
+  { key:'15d',    label:'15 Días',         min:7,         max:15,   color:'#f39c12', activeCls:'activo-naranja'},
+  { key:'30d',    label:'30 Días',         min:15,        max:30,   color:'#2ecc71', activeCls:'activo-verde'  },
+  { key:'60d',    label:'60 Días',         min:30,        max:60,   color:'#7ec8e3', activeCls:'activo-azul'   },
+  { key:'mas60',  label:'+60 Días',        min:60,        max:Infinity, color:'#888', activeCls:'activo-gris' },
+];
+let _filtroKey = null;
+let _unidadesCache = [];
 
+function renderPeriodos(unidades, kmDia) {
+  _unidadesCache = unidades;
   let html = '';
-  periodos.forEach(p => {
+  PERIODOS_DEF.forEach(p => {
     const grupo = unidades.filter(u => u.diasEst > p.min && u.diasEst <= p.max);
     if (grupo.length === 0) return;
     const total = grupo.reduce((s,u)=>s+u.costo,0);
-    html += `<div class="periodo-card">
-      <div class="periodo-titulo" style="color:${p.color}">${p.label}</div>
+    html += `<div class="periodo-card" id="pc-${p.key}" onclick="setFiltro('${p.key}')">
+      <div class="periodo-badge" style="color:${p.color};border-color:${p.color}20">${p.label}</div>
+      <div class="periodo-titulo" style="color:${p.color};font-size:28px;font-weight:800;margin-bottom:8px">${grupo.length}</div>
       <div class="periodo-row"><span class="periodo-label">Unidades</span><span class="periodo-val">${grupo.length}</span></div>
       <div class="periodo-row"><span class="periodo-label">Inversión estimada</span><span class="periodo-monto">${fmt(total)}</span></div>
       <div class="periodo-row"><span class="periodo-label">Promedio por unidad</span><span class="periodo-monto">${fmt(Math.round(total/grupo.length))}</span></div>
     </div>`;
   });
   document.getElementById('periodos').innerHTML = html;
+}
+
+function setFiltro(key) {
+  if (_filtroKey === key) { resetFiltro(); return; }
+  _filtroKey = key;
+  // quitar clase activo de todos
+  document.querySelectorAll('.periodo-card').forEach(el => {
+    el.classList.remove('activo');
+    PERIODOS_DEF.forEach(p => el.classList.remove(p.activeCls));
+  });
+  // activar el seleccionado
+  const p = PERIODOS_DEF.find(x=>x.key===key);
+  const card = document.getElementById('pc-'+key);
+  if (card && p) { card.classList.add('activo', p.activeCls); }
+  // filtrar tabla
+  const filtradas = _unidadesCache.filter(u => u.diasEst > p.min && u.diasEst <= p.max);
+  renderTabla(filtradas);
+  document.getElementById('filtro-label').textContent = `filtrado: ${p.label} (${filtradas.length} unidades)`;
+  document.getElementById('btn-reset-filtro').classList.add('visible');
+}
+
+function resetFiltro() {
+  _filtroKey = null;
+  document.querySelectorAll('.periodo-card').forEach(el => {
+    el.classList.remove('activo');
+    PERIODOS_DEF.forEach(p => el.classList.remove(p.activeCls));
+  });
+  renderTabla(_unidadesCache);
+  document.getElementById('filtro-label').textContent = 'ordenado por urgencia';
+  document.getElementById('btn-reset-filtro').classList.remove('visible');
 }
 
 function renderTabla(unidades) {
