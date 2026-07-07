@@ -670,7 +670,7 @@ function toggleDemo() {
 }
 
 init().then(()=>{
-  if(new URLSearchParams(location.search).get('demo')==='1') toggleDemo();
+  if(new URLSearchParams(location.search).get('real')!=='1') toggleDemo();
 });
 
 // ── SIDE PANEL ────────────────────────────────────────────────────────────

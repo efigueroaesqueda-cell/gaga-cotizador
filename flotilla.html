@@ -758,8 +758,8 @@ function renderTabla() {
     html += `<tr class="${pendiente}" data-eco="${eco}" onclick="abrirFicha('${eco}')" style="cursor:pointer">
       <td><span class="eco">${eco}</span></td>
       <td><div class="modelo">${u.modelo} <span style="color:#666;font-size:10px">${u.año}</span></div><div class="placa">${u.placas}</div></td>
-      <td><input class="km-input${changedKm}" type="number" min="0" max="999999" step="1" value="${kmVal}" placeholder="—" data-eco="${eco}" oninput="onKmInput(this,'${eco}')" onblur="onKmBlur('${eco}')"></td>
-      <td><input class="ult-input${changedUlt}" type="number" min="0" max="999999" step="1" value="${ultVal}" placeholder="—" title="KM del último servicio realizado" oninput="onUltimoInput(this,'${eco}')" onblur="onUltimoBlur('${eco}')"></td>
+      <td><input class="km-input${changedKm}" type="number" min="0" max="999999" step="1" value="${kmVal}" placeholder="—" data-eco="${eco}" oninput="onKmInput(this,'${eco}')" onblur="onKmBlur('${eco}')" onclick="event.stopPropagation()"></td>
+      <td><input class="ult-input${changedUlt}" type="number" min="0" max="999999" step="1" value="${ultVal}" placeholder="—" title="KM del último servicio realizado" oninput="onUltimoInput(this,'${eco}')" onblur="onUltimoBlur('${eco}')" onclick="event.stopPropagation()"></td>
       <td class="cel-proximo">${proxHtml}</td>
       <td class="cel-restante">${restHtml}</td>
       <td class="cel-sem">${semHtml}</td>
@@ -1293,7 +1293,7 @@ function renderExpTab(idx) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 init().then(()=>{
-  if(new URLSearchParams(location.search).get('demo')==='1') toggleDemo();
+  if(new URLSearchParams(location.search).get('real')!=='1') toggleDemo();
 });
 </script>
 </body>

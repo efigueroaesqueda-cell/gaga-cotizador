@@ -284,18 +284,21 @@ function loop(){
 }
 loop();
 
-// ── DEMO PARAM ──────────────────────────────────────────────────────────
-const _demo = new URLSearchParams(location.search).get('demo')==='1';
-if(_demo){
-  // propagar ?demo=1 a los links de módulos
+// ── MODO REAL (uso interno) ──────────────────────────────────────────────
+// Por default TODAS las ligas abren en modo demo (datos simulados) en flotilla.html
+// y proyeccion.html. Para trabajar con datos reales, agrega ?real=1 a esta liga
+// de bienvenida — se propaga automáticamente a los módulos.
+const _real = new URLSearchParams(location.search).get('real')==='1';
+if(_real){
   ['c1','c2','c3'].forEach(id=>{
     const el = document.getElementById(id);
-    if(el) el.href = el.href + '?demo=1';
+    if(el) el.href = el.href + '?real=1';
   });
-  // mostrar badge demo en bienvenida
+} else {
+  // mostrar aviso de que se está compartiendo en modo demo
   document.addEventListener('DOMContentLoaded',()=>{
     const b = document.querySelector('.badge-flotilla');
-    if(b) b.insertAdjacentHTML('afterend','<div style="margin-top:8px;font-size:10px;color:#c8a951;letter-spacing:1px;opacity:.7">▶ MODO DEMO ACTIVO</div>');
+    if(b) b.insertAdjacentHTML('afterend','<div style="margin-top:8px;font-size:10px;color:#c8a951;letter-spacing:1px;opacity:.7">▶ MODO DEMO ACTIVO (datos simulados)</div>');
   });
 }
 
@@ -303,12 +306,4 @@ if(_demo){
 function entrar(){
   document.getElementById('welcome').classList.add('oculto');
   setTimeout(()=>{
-    document.getElementById('modulos').classList.add('visible');
-    ['c1','c2','c3'].forEach((id,i)=>{
-      setTimeout(()=>document.getElementById(id).classList.add('aparece'), 80+i*150);
-    });
-  },520);
-}
-</script>
-</body>
-</html>
+    document.getElementB
