@@ -301,9 +301,18 @@ if(_real){
     if(b) b.insertAdjacentHTML('afterend','<div style="margin-top:8px;font-size:10px;color:#c8a951;letter-spacing:1px;opacity:.7">▶ MODO DEMO ACTIVO (datos simulados)</div>');
   });
 }
+}
 
 // ── TRANSICIÓN ──────────────────────────────────────────────────────────
 function entrar(){
   document.getElementById('welcome').classList.add('oculto');
   setTimeout(()=>{
-    document.getElementB
+    document.getElementById('modulos').classList.add('visible');
+    ['c1','c2','c3'].forEach((id,i)=>{
+      setTimeout(()=>document.getElementById(id).classList.add('aparece'), 80+i*150);
+    });
+  },520);
+}
+</script>
+</body>
+</html>
