@@ -854,13 +854,17 @@ function actualizarContadores() {
 }
 
 // ── AUTO-SAVE AL SALIR DEL CAMPO ─────────────────────────────────────────
+// En Modo Demo NUNCA se guarda en Supabase — son datos simulados para
+// presentación, no deben pisar el kilometraje real de GAGA.
 async function onKmBlur(eco) {
   if (kmEdits[eco] === undefined) return;
+  if (demoMode) { delete kmEdits[eco]; return; }
   await guardarUno(eco);
 }
 
 async function onUltimoBlur(eco) {
   if (ultimoEdits[eco] === undefined) return;
+  if (demoMode) { delete ultimoEdits[eco]; return; }
   await guardarUno(eco);
 }
 
