@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Henry's Diagnostics — Presentación de Flotilla</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0d0d0d;color:#eee;min-height:100vh}
+canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── PANTALLA DE CONFIGURACIÓN (elegir prospecto) ── */
+#config{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .6s ease,transform .6s ease}
+#config.oculto{opacity:0;transform:scale(1.04);pointer-events:none}
+.glass{background:rgba(255,255,255,.04);border:1px solid rgba(200,169,81,.22);border-radius:22px;padding:44px 46px 38px;text-align:center;backdrop-filter:blur(20px);box-shadow:0 0 70px rgba(200,169,81,.07),0 28px 70px rgba(0,0,0,.65);max-width:460px;width:94%}
+.logo-ring{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#c8a951,#7d6020);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 0 36px rgba(200,169,81,.45);font-size:27px;font-weight:900;color:#111}
+.label{font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:#c8a951;margin-bottom:10px;opacity:.85}
+.titulo{font-size:22px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:8px}
+.sub{font-size:12.5px;color:#777;margin-bottom:26px;line-height:1.6}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(200,169,81,.28),transparent);margin-bottom:22px}
+.opciones{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+.opcion{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:14px 18px;cursor:pointer;transition:border-color .2s,background .2s,transform .15s;text-align:left}
+.opcion:hover{border-color:rgba(200,169,81,.5);background:rgba(200,169,81,.05);transform:translateY(-2px)}
+.opcion-nombre{font-size:15px;font-weight:700;color:#fff}
+.opcion-desc{font-size:11.5px;color:#777;margin-top:2px}
+.opcion-badge{flex-shrink:0;background:rgba(200,169,81,.12);border:1px solid rgba(200,169,81,.35);color:#c8a951;font-size:12px;font-weight:700;padding:5px 13px;border-radius:16px;white-space:nowrap}
+.personalizado{margin-top:14px;display:flex;gap:8px}
+.personalizado input{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.12);color:#eee;padding:10px 12px;border-radius:10px;font-size:13px}
+.personalizado input::placeholder{color:#555}
+.personalizado input:focus{outline:none;border-color:#c8a951}
+.btn-ir{background:linear-gradient(135deg,#c8a951,#a07820);color:#111;font-weight:800;font-size:13px;padding:10px 20px;border-radius:10px;border:none;cursor:pointer;white-space:nowrap}
+.btn-ir:hover{box-shadow:0 6px 20px rgba(200,169,81,.4)}
+.hd-footer{margin-top:24px;font-size:11px;color:#3a3a3a;letter-spacing:.4px}
+.hd-footer span{color:#555}
+.nota-demo{margin-top:16px;font-size:10.5px;color:#555;line-height:1.6;font-style:italic}
+
+/* ── PORTAL (tabla de flotilla) ── */
+#portal{position:fixed;inset:0;z-index:5;opacity:0;pointer-events:none;transition:opacity .5s ease;overflow-y:auto}
+#portal.visible{opacity:1;pointer-events:all}
+.hdr{background:#111;border-bottom:3px solid #c8a951;padding:14px 28px;display:flex;align-items:center;gap:18px;min-height:70px;position:sticky;top:0;z-index:20}
+.hdr-title{font-size:17px;font-weight:700;color:#c8a951;letter-spacing:.4px}
+.hdr-sub{font-size:11px;color:#666;margin-top:2px}
+.btn-volver{margin-left:auto;background:transparent;border:1px solid #333;color:#aaa;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-volver:hover{color:#fff;border-color:#666}
+.summary{display:flex;gap:12px;padding:16px 24px;flex-wrap:wrap}
+.card{background:#1e1e1e;border-radius:8px;padding:14px 20px;min-width:130px;text-align:center;border-top:3px solid #555}
+.card.rojo{border-color:#e74c3c}.card.amarillo{border-color:#f39c12}.card.verde{border-color:#2ecc71}.card.gris{border-color:#666}
+.card-num{font-size:28px;font-weight:700;color:#fff}
+.card.rojo .card-num{color:#e74c3c}.card.amarillo .card-num{color:#f39c12}.card.verde .card-num{color:#2ecc71}.card.gris .card-num{color:#888}
+.card-lbl{font-size:11px;color:#aaa;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.demo-banner{background:#c8a951;color:#111;text-align:center;padding:6px;font-size:11.5px;font-weight:700;letter-spacing:.4px}
+.tbl-wrap{padding:0 24px 40px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:#c8a951;color:#111}
+thead th{padding:10px 12px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+tbody tr{border-bottom:1px solid #2a2a2a;cursor:pointer;transition:background .15s}
+tbody tr:hover{background:#252525}
+td{padding:9px 12px;vertical-align:middle}
+.eco{font-weight:700;color:#c8a951;font-size:13px}
+.modelo{font-size:12px;color:#ddd}
+.placa{font-size:11px;color:#888;font-family:monospace}
+.proximo,.restante{font-size:12px}
+.semaforo{display:inline-block;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.s-verde{background:#1a4a2a;color:#2ecc71;border:1px solid #2ecc71}
+.s-amarillo{background:#3a2a00;color:#f39c12;border:1px solid #f39c12}
+.s-rojo{background:#3a0a0a;color:#e74c3c;border:1px solid #e74c3c;animation:pulse 1.5s infinite}
+.s-gris{background:#222;color:#888;border:1px solid #555}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.grupo-hdr td{background:#1a1a1a;color:#c8a951;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;border-top:2px solid #333}
+
+/* SIDE PANEL simplificado */
+.sp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:850}
+.sp-overlay.visible{display:block}
+.side-panel{position:fixed;top:0;right:-460px;width:460px;height:100vh;background:#1a1a1a;border-left:2px solid #c8a951;z-index:900;overflow-y:auto;transition:right .3s ease}
+.side-panel.visible{right:0}
+.sp-hdr{background:#111;padding:16px 20px;border-bottom:2px solid #c8a951;display:flex;justify-content:space-between;align-items:flex-start}
+.sp-eco{font-size:22px;font-weight:700;color:#c8a951}
+.sp-modelo{font-size:12px;color:#aaa;margin-top:3px}
+.sp-placa{font-size:11px;color:#666;font-family:monospace;margin-top:1px}
+.sp-close{background:none;border:none;color:#aaa;font-size:24px;cursor:pointer;line-height:1}
+.sp-close:hover{color:#fff}
+.sp-body{padding:16px}
+.sp-estado-box{background:#252525;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.sp-prox-lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.sp-prox-val{font-size:20px;font-weight:700;color:#c8a951;margin-top:2px}
+.sp-rest{font-size:12px;color:#aaa;margin-top:3px}
+.sp-section-title{font-size:10px;color:#c8a951;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #2a2a2a}
+.sp-hist-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px}
+.sp-hist-table th{color:#666;text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;border-bottom:1px solid #2a2a2a}
+.sp-hist-table td{padding:8px 8px;border-bottom:1px solid #1e1e1e;color:#ccc}
+.sp-no-hist{text-align:center;padding:24px;color:#555;font-style:italic;font-size:12px}
+@media(max-width:600px){.side-panel{width:100vw;right:-100vw}}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<!-- ── CONFIGURACIÓN: elegir prospecto ── -->
+<div id="config">
+  <div class="glass">
+    <div class="logo-ring">H</div>
+    <div class="label">Henry's Diagnostics</div>
+    <div class="titulo">Portal de Administración<br>de Flotilla Vehicular</div>
+    <p class="sub">Elige para quién es esta presentación — el sistema se arma con una flotilla de muestra del tamaño real de su parque vehicular.</p>
+    <div class="divider"></div>
+    <div class="opciones">
+      <div class="opcion" onclick="iniciar('DACA', 18)">
+        <div><div class="opcion-nombre">DACA</div><div class="opcion-desc">Minera · 2 unidades ya en taller</div></div>
+        <span class="opcion-badge">18 unidades</span>
+      </div>
+      <div class="opcion" onclick="iniciar('Bimbo', 112)">
+        <div><div class="opcion-nombre">Bimbo</div><div class="opcion-desc">Panificadora · contrato en trámite</div></div>
+        <span class="opcion-badge">112 unidades</span>
+      </div>
+    </div>
+    <div class="personalizado">
+      <input type="text" id="nombreCustom" placeholder="Otro prospecto…">
+      <input type="number" id="unidadesCustom" placeholder="# unidades" style="max-width:100px" min="1" max="500">
+      <button class="btn-ir" onclick="iniciarCustom()">Ir →</button>
+    </div>
+    <p class="nota-demo">Vista de presentación — datos 100% simulados, no se conecta a ninguna base de datos real ni de GAGA ni de ningún cliente.</p>
+    <div class="hd-footer">Henry's Diagnostics · Colima, Col.</div>
+  </div>
+</div>
+
+<!-- ── PORTAL (tabla de flotilla generada) ── -->
+<div id="portal">
+  <div class="hdr">
+    <div>
+      <div class="hdr-title" id="portal-titulo">Portal Flotilla</div>
+      <div class="hdr-sub">Captura de KM · Proyección de servicio · Control de flotilla</div>
+    </div>
+    <button class="btn-volver" onclick="volver()">← Elegir otro prospecto</button>
+  </div>
+  <div class="demo-banner">⚠️ VISTA DE PRESENTACIÓN — Datos simulados, ninguno es real</div>
+  <div class="summary" id="summary">
+    <div class="card rojo"><div class="card-num" id="cnt-rojo">—</div><div class="card-lbl">🔴 Urgente (&lt;1,000 KM)</div></div>
+    <div class="card amarillo"><div class="card-num" id="cnt-amarillo">—</div><div class="card-lbl">🟡 Próximo (1-3k KM)</div></div>
+    <div class="card verde"><div class="card-num" id="cnt-verde">—</div><div class="card-lbl">🟢 Al día (&gt;3,000 KM)</div></div>
+    <div class="card gris"><div class="card-num" id="cnt-gris">—</div><div class="card-lbl">⚫ Sin registro</div></div>
+    <div class="card" style="border-color:#c8a951"><div class="card-num" style="color:#c8a951" id="cnt-total">—</div><div class="card-lbl">Total unidades</div></div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Eco</th><th>Modelo / Placa</th><th>KM Actual</th>
+          <th>Próximo Servicio</th><th>KM Restantes</th><th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tbl-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SIDE PANEL -->
+<div class="sp-overlay" id="sp-overlay" onclick="cerrarFicha()"></div>
+<div class="side-panel" id="side-panel">
+  <div class="sp-hdr">
+    <div>
+      <div class="sp-eco" id="sp-eco"></div>
+      <div class="sp-modelo" id="sp-modelo"></div>
+      <div class="sp-placa" id="sp-placa"></div>
+    </div>
+    <button class="sp-close" onclick="cerrarFicha()">✕</button>
+  </div>
+  <div class="sp-body" id="sp-body"></div>
+</div>
+
+<script>
+// ── PARTÍCULAS (mismo fondo que bienvenida.html) ─────────────────────────
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize(){ W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+resize(); window.addEventListener('resize', resize);
+const pts = Array.from({length:80},()=>({x:Math.random()*1000,y:Math.random()*1000,vx:(Math.random()-.5)*.25,vy:-(Math.random()*.35+.08),r:Math.random()*1.4+.3,o:Math.random()*.45+.08}));
+function loop(){
+  ctx.clearRect(0,0,W,H);
+  pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.y<-6){p.y=H+6;p.x=Math.random()*W}if(p.x<-6)p.x=W+6;if(p.x>W+6)p.x=-6});
+  for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);
+    if(d<110){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(200,169,81,${.05*(1-d/110)})`;ctx.lineWidth=.5;ctx.stroke()}
+  }
+  pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(200,169,81,${p.o})`;ctx.fill()});
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ── GENERADOR DE FLOTILLA FICTICIA ───────────────────────────────────────
+// 100% simulado — no representa ninguna unidad, placa ni cliente real.
+// Determinístico por seed (nombre del prospecto) para que la demo se vea
+// igual cada vez que se presenta a la misma empresa.
+const MODELOS = [
+  {grupo:'Toyota Hilux',modelo:'Hilux SRV 4x4',marca:'Toyota'},
+  {grupo:'Nissan NP300',modelo:'NP300 Frontier',marca:'Nissan'},
+  {grupo:'Mitsubishi L200',modelo:'L200 4x4',marca:'Mitsubishi'},
+  {grupo:'Chevrolet Tornado',modelo:'Tornado Pickup',marca:'Chevrolet'},
+  {grupo:'Ford F-150',modelo:'F-150 XL',marca:'Ford'},
+  {grupo:'Volkswagen Saveiro',modelo:'Saveiro Robust',marca:'Volkswagen'},
+  {grupo:'RAM 4000',modelo:'RAM 4000',marca:'RAM'},
+];
+const COSTOS_BASE = [3800,6200,3800,9700,3800,12300,3800,9700];
+
+function sr(seed, min, max) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+  return min + (Math.abs(h) % (max - min + 1));
+}
+function addDias(base, dias){ const d=new Date(base); d.setDate(d.getDate()+dias); return d; }
+function fmtF(d){ return d.toISOString().split('T')[0]; }
+function fmtKm(n){ return n.toLocaleString('es-MX')+' KM'; }
+
+let DB = {}, KM_DATA = {}, HIST = {};
+
+function generarFlotilla(cliente, n) {
+  DB = {}; KM_DATA = {}; HIST = {};
+  for (let i = 1; i <= n; i++) {
+    const eco = `${cliente.slice(0,3).toUpperCase()}-${String(i).padStart(3,'0')}`;
+    const s = eco;
+    const m = MODELOS[sr(s+'m',0,MODELOS.length-1)];
+    const año = 2026 - sr(s+'a',0,6);
+    DB[eco] = { marca:m.marca, modelo:m.modelo, año, placas:`DEMO-${sr(s+'p',1000,9999)}`, grupo:m.grupo };
+
+    const pct = sr(s+'pct',0,99);
+    const bases = [5000,18000,35000,55000,75000,95000,115000];
+    const base = bases[Math.min(2026-año, bases.length-1)];
+    const var_ = sr(s+'var',-25,25);
+    let kmA = Math.round(base*(1+var_/100)/100)*100;
+    if (kmA < 2000) kmA = 2000;
+    let kmU = null;
+
+    if (pct < 5) { KM_DATA[eco] = { km:null, kmUltimo:null }; continue; }
+    if (pct < 20) {
+      const vencido = sr(s+'vc',500,7000);
+      const prox = Math.ceil((kmA-vencido+1)/10000)*10000;
+      const b = prox-10000; kmU = b>0 ? b+sr(s+'ul',300,8500) : null; kmA = kmA;
+    } else if (pct < 38) {
+      const nextM = (Math.floor(kmA/10000)+1)*10000;
+      kmA = nextM - sr(s+'rg',150,950);
+      const b = nextM-10000; kmU = b>0 ? b+sr(s+'ul',300,8500) : null;
+    } else if (pct < 63) {
+      const nextM = (Math.floor(kmA/10000)+1)*10000;
+      kmA = nextM - sr(s+'rp',1050,2950);
+      const b = nextM-10000; kmU = b>0 ? b+sr(s+'ul',300,7500) : null;
+    } else {
+      const nextM = (Math.floor(kmA/10000)+1)*10000;
+      kmA = nextM - sr(s+'ra',3100,8000);
+      if (kmA < 1000) kmA = nextM + sr(s+'af',3100,5000);
+      const b = nextM-10000; kmU = b>0 ? b+sr(s+'ul',200,6500) : null;
+    }
+    KM_DATA[eco] = { km:kmA, kmUltimo:kmU };
+
+    if (!kmU || kmU < 10000) continue;
+    const ultComp = Math.floor(kmU/10000)*10000;
+    if (ultComp < 10000) continue;
+    const hist = [];
+    let fecha = new Date(`${Math.max(2026-Math.ceil(kmA/12000),2023)}-0${sr(s+'fm',1,6)}-01`);
+    for (let km = 10000; km <= ultComp; km += 10000) {
+      const costo = COSTOS_BASE[Math.min(km/10000-1, COSTOS_BASE.length-1)];
+      const tipo = km%20000===0 ? 'Afinación mayor' : 'Afinación + Aceite';
+      hist.push({ fecha: fmtF(fecha), km, desc:`Servicio ${km.toLocaleString('es-MX')} KM — ${tipo}`, total: costo });
+      fecha = addDias(fecha, sr(s+'sd'+km,55,130));
+    }
+    if (hist.length) HIST[eco] = hist;
+  }
+}
+
+// ── SEMÁFORO ──────────────────────────────────────────────────────────────
+function calcSemaforo(km, kmUltimo) {
+  const proximo = Math.ceil((km+1)/10000)*10000;
+  const restante = proximo - km;
+  let clase, label;
+  if (restante <= 0) { clase='s-rojo'; label='VENCIDO'; }
+  else if (restante < 1000) { clase='s-rojo'; label='URGENTE'; }
+  else if (restante <= 3000) { clase='s-amarillo'; label='Próximo'; }
+  else { clase='s-verde'; label='Al día'; }
+  return { proximo, restante, clase, label };
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function renderTabla() {
+  const tbody = document.getElementById('tbl-body');
+  let html = '';
+  let cntRojo=0,cntAmarillo=0,cntVerde=0,cntGris=0,cntTotal=0;
+  let grupoActual = null;
+
+  Object.entries(DB).forEach(([eco,u]) => {
+    const d = KM_DATA[eco];
+    const km = d.km, kmUltimo = d.kmUltimo;
+    const sinRegistro = km === null;
+    let estadoKey='gris', sem=null;
+    if (!sinRegistro) { sem = calcSemaforo(km, kmUltimo); estadoKey = sem.clase.replace('s-',''); }
+    cntTotal++;
+    if (sinRegistro) cntGris++; else if (estadoKey==='rojo') cntRojo++; else if (estadoKey==='amarillo') cntAmarillo++; else cntVerde++;
+
+    if (u.grupo !== grupoActual) { grupoActual = u.grupo; html += `<tr class="grupo-hdr"><td colspan="6">${u.grupo}</td></tr>`; }
+
+    const semHtml = sinRegistro ? '<span class="semaforo s-gris">Sin registro</span>' : `<span class="semaforo ${sem.clase}">${sem.label}</span>`;
+    const proxHtml = sinRegistro ? '<span style="color:#555">—</span>' : fmtKm(sem.proximo);
+    const restColor = estadoKey==='rojo'?'#e74c3c':estadoKey==='amarillo'?'#f39c12':'#2ecc71';
+    const restLabel = sem && sem.restante<=0 ? `${fmtKm(Math.abs(sem.restante))} VENCIDO` : sem ? fmtKm(sem.restante) : '';
+    const restHtml = sinRegistro ? '<span style="color:#555">—</span>' : `<span class="restante" style="color:${restColor}">${restLabel}</span>`;
+    const kmHtml = sinRegistro ? '<span style="color:#555">—</span>' : fmtKm(km);
+
+    html += `<tr onclick="abrirFicha('${eco}')">
+      <td><span class="eco">${eco}</span></td>
+      <td><div class="modelo">${u.modelo} <span style="color:#666;font-size:10px">${u.año}</span></div><div class="placa">${u.placas}</div></td>
+      <td>${kmHtml}</td><td>${proxHtml}</td><td>${restHtml}</td><td>${semHtml}</td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+  document.getElementById('cnt-rojo').textContent = cntRojo;
+  document.getElementById('cnt-amarillo').textContent = cntAmarillo;
+  document.getElementById('cnt-verde').textContent = cntVerde;
+  document.getElementById('cnt-gris').textContent = cntGris;
+  document.getElementById('cnt-total').textContent = cntTotal;
+}
+
+// ── FICHA LATERAL ─────────────────────────────────────────────────────────
+function abrirFicha(eco) {
+  const u = DB[eco], d = KM_DATA[eco];
+  document.getElementById('sp-eco').textContent = eco;
+  document.getElementById('sp-modelo').textContent = `${u.marca} ${u.modelo} (${u.año})`;
+  document.getElementById('sp-placa').textContent = u.placas;
+
+  let bodyHtml = '';
+  if (d.km !== null) {
+    const sem = calcSemaforo(d.km, d.kmUltimo);
+    const color = sem.clase==='s-rojo'?'#e74c3c':sem.clase==='s-amarillo'?'#f39c12':'#2ecc71';
+    bodyHtml += `<div class="sp-estado-box">
+      <div><div class="sp-prox-lbl">Próximo servicio</div><div class="sp-prox-val">${fmtKm(sem.proximo)}</div>
+      <div class="sp-rest" style="color:${color}">${sem.restante<=0?fmtKm(Math.abs(sem.restante))+' vencido':fmtKm(sem.restante)+' restantes'}</div></div>
+      <span class="semaforo ${sem.clase}">${sem.label}</span>
+    </div>`;
+  }
+  bodyHtml += '<div class="sp-section-title">Historial de servicios</div>';
+  const hist = HIST[eco];
+  if (hist && hist.length) {
+    bodyHtml += '<table class="sp-hist-table"><thead><tr><th>Fecha</th><th>Servicio</th><th>Total</th></tr></thead><tbody>';
+    [...hist].reverse().forEach(h => {
+      bodyHtml += `<tr><td>${h.fecha}</td><td>${h.desc}</td><td>$${h.total.toLocaleString('es-MX')}</td></tr>`;
+    });
+    bodyHtml += '</tbody></table>';
+  } else {
+    bodyHtml += '<div class="sp-no-hist">Sin historial de servicios todavía.</div>';
+  }
+  document.getElementById('sp-body').innerHTML = bodyHtml;
+
+  document.getElementById('sp-overlay').classList.add('visible');
+  document.getElementById('side-panel').classList.add('visible');
+}
+function cerrarFicha() {
+  document.getElementById('sp-overlay').classList.remove('visible');
+  document.getElementById('side-panel').classList.remove('visible');
+}
+
+// ── TRANSICIONES ──────────────────────────────────────────────────────────
+function iniciar(cliente, unidades) {
+  generarFlotilla(cliente, unidades);
+  document.getElementById('portal-titulo').textContent = `Portal Flotilla · ${cliente}`;
+  renderTabla();
+  document.getElementById('config').classList.add('oculto');
+  setTimeout(()=>document.getElementById('portal').classList.add('visible'), 400);
+}
+function iniciarCustom() {
+  const nombre = document.getElementById('nombreCustom').value.trim();
+  const n = parseInt(document.getElementById('unidadesCustom').value);
+  if (!nombre || !n || n < 1) { alert('Escribe un nombre y un número de unidades válido.'); return; }
+  iniciar(nombre, Math.min(n, 500));
+}
+function volver() {
+  document.getElementById('portal').classList.remove('visible');
+  document.getElementById('config').classList.remove('oculto');
+  cerrarFicha();
+}
+</script>
+</body>
+</html>
