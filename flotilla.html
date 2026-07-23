@@ -40,7 +40,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#1a1a1a;color:#eee;min-h
 .tbl-wrap{padding:0 24px 40px;overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead tr{background:#c8a951;color:#111}
-thead th{padding:10px 12px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+thead th{padding:10px 12px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;position:sticky;top:var(--sticky-top,0px);z-index:5;background:#c8a951;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+thead th[data-sort]{cursor:pointer;user-select:none;padding-right:22px}
+thead th[data-sort]:hover{background:#d9ba62}
+thead th[data-sort]::after{content:'⇅';position:absolute;right:7px;opacity:.4;font-size:10px}
+thead th[data-sort].sort-asc::after{content:'▲';opacity:1}
+thead th[data-sort].sort-desc::after{content:'▼';opacity:1}
 tbody tr{border-bottom:1px solid #2a2a2a;cursor:pointer;transition:background .15s}
 tbody tr:hover{background:#252525}
 tbody tr.pendiente{background:#1e1e10}
@@ -266,13 +271,13 @@ td{padding:9px 12px;vertical-align:middle}
   <table id="tbl">
     <thead>
       <tr>
-        <th>Eco</th>
-        <th>Modelo / Placa</th>
-        <th>KM Actual</th>
-        <th title="KM al que se realizó el último servicio">Último Serv.</th>
-        <th>Próximo Servicio</th>
-        <th>KM Restantes</th>
-        <th>Estado</th>
+        <th data-sort="eco" onclick="sortBy('eco',this)">Eco</th>
+        <th data-sort="modelo" onclick="sortBy('modelo',this)">Modelo / Placa</th>
+        <th data-sort="km" onclick="sortBy('km',this)">KM Actual</th>
+        <th data-sort="ultimo" onclick="sortBy('ultimo',this)" title="KM al que se realizó el último servicio">Último Serv.</th>
+        <th data-sort="proximo" onclick="sortBy('proximo',this)">Próximo Servicio</th>
+        <th data-sort="restante" onclick="sortBy('restante',this)">KM Restantes</th>
+        <th data-sort="estado" onclick="sortBy('estado',this)">Estado</th>
         <th>Cotización</th>
       </tr>
     </thead>
@@ -673,6 +678,8 @@ let kmData = {};        // eco → { km, fecha, kmUltimo } guardado en DB
 let kmEdits = {};       // eco → km_actual editado pero no guardado aún
 let ultimoEdits = {};   // eco → km_ultimo_servicio editado pero no guardado aún
 let filtroCurrent = 'todos';
+let sortField = null;   // columna activa de orden (null = orden agrupado original)
+let sortDir = 1;        // 1 = ascendente, -1 = descendente
 let _preciosCache = {};
 
 // ── CARGA INICIAL ─────────────────────────────────────────────────────────
@@ -712,6 +719,7 @@ function renderTabla() {
   let cntRojo=0, cntAmarillo=0, cntVerde=0, cntGris=0, cntTotal=0;
   let grupoActual = null;
 
+  const filas = [];
   Object.entries(DB).forEach(([eco, u]) => {
     const km = kmEdits[eco] !== undefined ? kmEdits[eco] : (kmData[eco]?.km ?? null);
     const kmUltimo = ultimoEdits[eco] !== undefined ? ultimoEdits[eco] : (kmData[eco]?.kmUltimo ?? null);
@@ -732,8 +740,31 @@ function renderTabla() {
     else if (estadoKey==='amarillo') cntAmarillo++;
     else cntVerde++;
 
-    // Header de grupo
-    if (u.grupo !== grupoActual) {
+    filas.push({ eco, u, km, kmUltimo, sinRegistro, estadoKey, sem });
+  });
+
+  if (sortField) {
+    const ORDEN_ESTADO = { rojo:0, amarillo:1, verde:2, gris:3 };
+    filas.sort((a,b) => {
+      let va, vb;
+      switch (sortField) {
+        case 'eco':      va=a.eco; vb=b.eco; break;
+        case 'modelo':   va=a.u.modelo+' '+a.u.placas; vb=b.u.modelo+' '+b.u.placas; break;
+        case 'km':       va=a.sinRegistro?-1:a.km; vb=b.sinRegistro?-1:b.km; break;
+        case 'ultimo':   va=a.kmUltimo??-1; vb=b.kmUltimo??-1; break;
+        case 'proximo':  va=a.sem?a.sem.proximo:-1; vb=b.sem?b.sem.proximo:-1; break;
+        case 'restante': va=a.sem?a.sem.restante:Infinity; vb=b.sem?b.sem.restante:Infinity; break;
+        case 'estado':   va=ORDEN_ESTADO[a.estadoKey]; vb=ORDEN_ESTADO[b.estadoKey]; break;
+        default: va=0; vb=0;
+      }
+      if (typeof va === 'string') return va.localeCompare(vb) * sortDir;
+      return (va - vb) * sortDir;
+    });
+  }
+
+  filas.forEach(({eco, u, km, kmUltimo, sinRegistro, estadoKey, sem}) => {
+    // Header de grupo (solo cuando no hay orden manual activo)
+    if (!sortField && u.grupo !== grupoActual) {
       grupoActual = u.grupo;
       html += `<tr class="grupo-hdr"><td colspan="8">${GRUPOS_LABEL[u.grupo]||u.grupo}</td></tr>`;
     }
@@ -908,6 +939,18 @@ function filtrar(tipo, btn) {
   renderTabla();
 }
 
+// ── ORDEN (click en encabezado de columna) ───────────────────────────────
+// 3 estados por columna: ascendente → descendente → sin orden (vuelve al agrupado por modelo)
+function sortBy(field, th) {
+  if (sortField !== field) { sortField = field; sortDir = 1; }
+  else if (sortDir === 1) { sortDir = -1; }
+  else { sortField = null; sortDir = 1; }
+
+  document.querySelectorAll('#tbl thead th[data-sort]').forEach(h => h.classList.remove('sort-asc','sort-desc'));
+  if (sortField) th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+  renderTabla();
+}
+
 document.getElementById('buscar').addEventListener('input', renderTabla);
 
 // ── COTIZACIÓN MODAL ──────────────────────────────────────────────────────
@@ -982,7 +1025,7 @@ async function verCotizacion(eco, event) {
 }
 
 function cerrarModal() { document.getElementById('modal').classList.remove('visible'); }
-document.addEventListener('keydown', e => { if(e.key==='Escape') { cerrarExpediente(); cerrarModal(); } });
+document.addEventListener('keydown', e => { if(e.key==='Escape') { cerrarExpediente(); cerrarModal(); cerrarFicha(); } });
 
 // ── TOAST ─────────────────────────────────────────────────────────────────
 function toast(msg, esError=false) {
@@ -991,6 +1034,14 @@ function toast(msg, esError=false) {
   t.className = 'toast' + (esError?' error':'') + ' show';
   setTimeout(() => t.className='toast', 3000);
 }
+
+// ── STICKY HEADER: offset dinámico si el banner de demo está visible ────
+function actualizarStickyOffset() {
+  const banner = document.getElementById('demo-banner');
+  const h = banner.classList.contains('visible') ? banner.offsetHeight : 0;
+  document.documentElement.style.setProperty('--sticky-top', h + 'px');
+}
+window.addEventListener('resize', actualizarStickyOffset);
 
 // ── MODO DEMO ────────────────────────────────────────────────────────────────
 let demoMode = false;
@@ -1028,6 +1079,7 @@ function toggleDemo() {
     });
   }
   cerrarFicha();
+  actualizarStickyOffset();
   renderTabla();
 }
 
@@ -1196,6 +1248,55 @@ const _OPORT = [
   {p:'baja',t:'Limpieza de inyectores',d:'Depósito leve detectado. Tratamiento de limpieza en próximo servicio preventivo.'},
 ];
 const _EVID = ['Lectura odómetro','Filtros reemplazados','Estado pastillas','Aceite instalado','Estado llantas','Diagnóstico OBD','Fuga detectada','Revisión suspensión'];
+
+// ── ILUSTRACIONES SIMULADAS: pieza retirada (usada) vs. instalada (nueva) ──
+function _svgFiltro(usado) {
+  const cuerpo = usado ? '#5a4324' : '#c8a951';
+  const tapa   = usado ? '#3d2f18' : '#8a6d2e';
+  const mancha = usado ? `<ellipse cx="50" cy="70" rx="20" ry="4" fill="#1a1206" opacity=".55"/>
+    <path d="M36 66 q3 10 8 12" stroke="#1a1206" stroke-width="2.5" fill="none" opacity=".6" stroke-linecap="round"/>
+    <circle cx="63" cy="42" r="2.5" fill="#2a2010" opacity=".6"/>` : `<rect x="30" y="20" width="6" height="42" fill="#fff" opacity=".18"/>`;
+  return `<svg viewBox="0 0 100 90" width="100%" height="100%">
+    <ellipse cx="50" cy="18" rx="24" ry="7" fill="${tapa}"/>
+    <rect x="26" y="18" width="48" height="46" fill="${cuerpo}"/>
+    <ellipse cx="50" cy="64" rx="24" ry="7" fill="${tapa}"/>
+    ${mancha}
+  </svg>`;
+}
+function _svgBalata(usado) {
+  const friccion = usado ? 8 : 38;
+  const yFriccion = 60 - friccion;
+  const colorFric = usado ? '#2a2118' : '#3a2c1a';
+  const desgaste = usado ? `<line x1="30" y1="55" x2="70" y2="55" stroke="#1a1410" stroke-width="1.5" opacity=".7"/>
+    <line x1="32" y1="58" x2="68" y2="58" stroke="#1a1410" stroke-width="1" opacity=".5"/>
+    <circle cx="45" cy="52" r="1.5" fill="#3a1a1a"/>` : '';
+  return `<svg viewBox="0 0 100 90" width="100%" height="100%">
+    <rect x="24" y="60" width="52" height="14" rx="3" fill="#888" stroke="#555"/>
+    <rect x="28" y="${yFriccion}" width="44" height="${friccion}" fill="${colorFric}"/>
+    ${desgaste}
+    <rect x="24" y="60" width="52" height="14" rx="3" fill="none" stroke="#555" stroke-width="1"/>
+  </svg>`;
+}
+function _svgAmortiguador(usado) {
+  const cuerpo = usado ? '#2e2a26' : '#1c1c1c';
+  const vastago = usado ? '#8a8478' : '#d8d8d8';
+  const fuga = usado ? `<path d="M42 58 q-4 10 -2 20" stroke="#8a6a1a" stroke-width="3" fill="none" opacity=".65" stroke-linecap="round"/>
+    <ellipse cx="40" cy="80" rx="5" ry="2.5" fill="#8a6a1a" opacity=".5"/>
+    <circle cx="55" cy="24" r="1.5" fill="#4a4038" opacity=".8"/>
+    <circle cx="48" cy="30" r="1" fill="#4a4038" opacity=".8"/>` : '';
+  return `<svg viewBox="0 0 100 90" width="100%" height="100%">
+    <rect x="46" y="6" width="6" height="28" fill="${vastago}"/>
+    <rect x="34" y="30" width="30" height="40" rx="4" fill="${cuerpo}"/>
+    <rect x="30" y="66" width="38" height="8" rx="2" fill="#111"/>
+    ${fuga}
+  </svg>`;
+}
+// Mapa: caption de evidencia → pieza a ilustrar en comparación usada/nueva
+const _EVID_PARTES = {
+  'Filtros reemplazados': { nombre: 'Filtro de aceite', svg: _svgFiltro },
+  'Estado pastillas':     { nombre: 'Balatas delanteras', svg: _svgBalata },
+  'Revisión suspensión':  { nombre: 'Amortiguador', svg: _svgAmortiguador },
+};
 const _TECS = ['Ing. Martínez','Carlos R.','Tec. Flores','Tec. Gutiérrez','Roberto M.'];
 
 function abrirExpediente(eco, histIdx) {

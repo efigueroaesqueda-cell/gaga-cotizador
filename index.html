@@ -499,6 +499,11 @@ body {
     ⚠️ Esta unidad está en proceso de cotización. Contactar a Henry's Diagnostics para más información.
   </div>
 
+  <!-- PRECIOS ESTIMADOS (respaldo local mientras se restablece la base de precios real) -->
+  <div class="pendiente-box" id="precio-estimado-box" style="display:none">
+    ⚠️ Precio de referencia estimado — pendiente confirmar con la lista de precios oficial. No usar como cotización final con el cliente.
+  </div>
+
   <!-- DESGLOSE -->
   <div class="card" id="card-desglose">
     <div class="card-hdr" id="desglose-hdr">Desglose del servicio</div>
@@ -728,19 +733,118 @@ function getTipoVehiculo(vehiculo) {
   return MAP[g] || null;
 }
 
+// ── PRECIOS LOCALES DE RESPALDO ──────────────────────────────────────────
+// Se usan SOLO si Supabase no responde (ej. proyecto pausado/caído).
+// Son estimados cordiales por familia de vehículo, no precios oficiales —
+// en cuanto Supabase vuelva a responder, fetchPrecios() usa esos datos reales de nuevo.
+const _COSTOS_LOCAL = {
+  HILUX:    [3850,6200,3850,9800,3850,12500,3850,9800,3850],
+  HIACE:    [4000,6500,4000,10000,4000,13000,4000],
+  L200:     [3650,5800,3650,9200,3650,11800,3650,9200],
+  NP300:    [3950,6400,3950,10200,3950,12800,3950],
+  URVAN:    [4100,6800,4100,10500,4100,13200],
+  JAC:      [3800,6000,3800,9500,3800,12000],
+  TORNADO:  [2800,4500,2800,7200,2800,9000,2800],
+  VW:       [2600,4200,2600,6800,2600],
+  RAM4000:  [4200,7100,4200,11500,4200,14000,4200],
+  TRUCK_HD: [4000,6600,4000,10800,4000,13500,4000],
+  TRUCK_MID:[3400,5600,3400,8800,3400,11000,3400],
+  SEDAN:    [2000,3200,2000,5200,2000,6800,2000],
+};
+
+const _TIPO_VEHICULO_GRUPO = {
+  'Toyota Hilux SRV Diesel':          'HILUX',
+  'Toyota Hiace Commuter Diesel':     'HIACE',
+  'Mitsubishi L200 Diesel':           'L200',
+  'JAC Sunray Diesel':                'JAC',
+  'Chevrolet Tornado Gasolina':       'TORNADO',
+  'Ram 4000 Gasolina':                'RAM4000',
+  'Ram ProMaster 2500 Gasolina':      'TRUCK_HD',
+  'Toyota 4Runner TRD Sport Gasolina':'TRUCK_HD',
+  'Ford F-150 Raptor Gasolina':       'TRUCK_HD',
+  'Ford F-150 Tremor Gasolina':       'TRUCK_HD',
+  'Toyota Tacoma TRD Sport Gasolina': 'TRUCK_MID',
+  'Toyota Tacoma PreRunner Gasolina': 'TRUCK_MID',
+  'Toyota Tacoma Pickup Gasolina':    'TRUCK_MID',
+  'Toyota Land Cruiser FJ80 Gasolina':'TRUCK_HD',
+  'Toyota Sequoia SR5 Gasolina':      'TRUCK_HD',
+  'Chevrolet Tahoe LTZ Gasolina':     'TRUCK_HD',
+  'Chevrolet Tahoe Premier Gasolina': 'TRUCK_HD',
+  'Nissan Frontier D22 Gasolina':     'TRUCK_MID',
+  'Nissan King Cab D21 Gasolina':     'TRUCK_MID',
+  'Nissan Altima SL Gasolina':        'SEDAN',
+  'Nissan Versa Advance Gasolina':    'SEDAN',
+  'Nissan X-Trail Advance Gasolina':  'SEDAN',
+  'Kia Forte LX Gasolina':            'SEDAN',
+  'Kia Rio LX Gasolina':              'SEDAN',
+  'Honda Accord EX-L Gasolina':       'SEDAN',
+  'Hyundai i10 GLS Gasolina':         'SEDAN',
+  'Nissan NP300 Diesel':              'NP300',
+  'Nissan Urvan NV350 Diesel':        'URVAN',
+  'VW Saveiro Gasolina':              'VW',
+  'VW Robust Gasolina':               'VW',
+};
+
+function _generarPreciosLocal(tipoVehiculo, costos) {
+  const KMS = [10000,20000,30000,40000,50000,60000,70000,80000,90000,100000];
+  const rows = [];
+  KMS.forEach((km, i) => {
+    const total     = costos[Math.min(i, costos.length - 1)];
+    const mayor     = km % 20000 === 0;
+    const refaccion = Math.round(total * 0.55);
+    const manoObra  = total - refaccion;
+    rows.push({
+      tipo_vehiculo: tipoVehiculo, km_intervalo: km, tipo: 'Refacción',
+      descripcion: mayor ? 'Afinación mayor — refacciones' : 'Cambio de aceite — refacciones',
+      descripcion_sub: mayor ? 'Aceite sintético + filtro de aceite + filtro de aire' : 'Aceite sintético + filtro de aceite',
+      cantidad: 1, precio_unitario: refaccion, total: refaccion,
+    });
+    rows.push({
+      tipo_vehiculo: tipoVehiculo, km_intervalo: km, tipo: 'Mano de obra',
+      descripcion: mayor ? 'Afinación mayor — mano de obra' : 'Cambio de aceite — mano de obra',
+      descripcion_sub: 'Diagnóstico + instalación + prueba de ruta',
+      cantidad: 1, precio_unitario: manoObra, total: manoObra,
+    });
+  });
+  return rows;
+}
+
+const _preciosLocalCache = {};
+function preciosLocal(tipoVehiculo) {
+  if (_preciosLocalCache[tipoVehiculo]) return _preciosLocalCache[tipoVehiculo];
+  const grupo  = _TIPO_VEHICULO_GRUPO[tipoVehiculo] || 'SEDAN';
+  const costos = _COSTOS_LOCAL[grupo] || _COSTOS_LOCAL.SEDAN;
+  const rows   = _generarPreciosLocal(tipoVehiculo, costos);
+  _preciosLocalCache[tipoVehiculo] = rows;
+  return rows;
+}
+
 // ── CACHÉ DE PRECIOS ─────────────────────────────────────────────────────
 const _preciosCache = {};
+let _ultimoPrecioEsLocal = false;
 
 async function fetchPrecios(tipoVehiculo) {
-  if (_preciosCache[tipoVehiculo]) return _preciosCache[tipoVehiculo];
-  const resp = await fetch(
-    `${SUPABASE_URL}/rest/v1/precios_gaga?tipo_vehiculo=eq.${encodeURIComponent(tipoVehiculo)}&order=km_intervalo.asc`,
-    { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
-  );
-  if (!resp.ok) throw new Error(`Supabase ${resp.status}: ${await resp.text()}`);
-  const data = await resp.json();
-  _preciosCache[tipoVehiculo] = data;
-  return data;
+  if (_preciosCache[tipoVehiculo]) { _ultimoPrecioEsLocal = _preciosCache[tipoVehiculo]._local; return _preciosCache[tipoVehiculo]; }
+  try {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/precios_gaga?tipo_vehiculo=eq.${encodeURIComponent(tipoVehiculo)}&order=km_intervalo.asc`,
+      { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    if (!resp.ok) throw new Error(`Supabase ${resp.status}: ${await resp.text()}`);
+    const data = await resp.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error('Supabase sin datos para este vehículo');
+    data._local = false;
+    _preciosCache[tipoVehiculo] = data;
+    _ultimoPrecioEsLocal = false;
+    return data;
+  } catch (e) {
+    console.warn('Supabase no disponible, usando precios locales de respaldo:', e.message);
+    const local = preciosLocal(tipoVehiculo);
+    local._local = true;
+    _preciosCache[tipoVehiculo] = local;
+    _ultimoPrecioEsLocal = true;
+    return local;
+  }
 }
 
 
@@ -775,6 +879,7 @@ async function actualizar() {
   const u   = DB[eco];
 
   document.getElementById('pendiente-box').style.display = 'none';
+  document.getElementById('precio-estimado-box').style.display = 'none';
 
   if (!u) {
     document.getElementById('total-display').textContent = '—';
@@ -816,6 +921,7 @@ async function actualizar() {
 
   try {
     const rows = await fetchPrecios(tv);
+    document.getElementById('precio-estimado-box').style.display = _ultimoPrecioEsLocal ? 'block' : 'none';
 
     // Poblar km selector con totales
     poblarSelectKm(rows);
