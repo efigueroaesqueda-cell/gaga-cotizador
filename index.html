@@ -688,11 +688,12 @@ const DB = {
   'V-26': {marca:'Ram',modelo:'4000 Chassis',año:2024,motor:'5.7L Gasolina HEMI V8',placas:'JD-0402-A',vin:'3C7WRAKT5RG400841',color:'Blanco',grupo:'RAM4000'},
 };
 
-// ── SUPABASE ─────────────────────────────────────────────────────────────
-const SUPABASE_URL      = 'https://bgpugtgjbfseqwwcwpyd.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJncHVndGdqYmZzZXF3d2N3cHlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjM4MjEsImV4cCI6MjA5ODEzOTgyMX0.iYp-y00qYWv9uvJX73eAASeKy5qbonXN3Jbwd4qRxPM';
+// ── API DE PRECIOS (Railway: Postgres + PostgREST) ───────────────────────
+// Reemplaza al Supabase de GAGA que se dio de baja por inactividad.
+// Ver memoria feedback_dar_raiz_a_proyectos.
+const API_URL = 'https://flotillas-api-production.up.railway.app';
 
-// ── MAPEO GRUPO → TIPO_VEHICULO EN SUPABASE ──────────────────────────────
+// ── MAPEO GRUPO → TIPO_VEHICULO EN LA BASE DE PRECIOS ─────────────────────
 function getTipoVehiculo(vehiculo) {
   const g = vehiculo.grupo;
   const m = vehiculo.modelo || '';
@@ -824,23 +825,23 @@ const _preciosCache = {};
 let _ultimoPrecioEsLocal = false;
 
 async function fetchPrecios(tipoVehiculo) {
-  if (_preciosCache[tipoVehiculo]) { _ultimoPrecioEsLocal = _preciosCache[tipoVehiculo]._local; return _preciosCache[tipoVehiculo]; }
+  if (_preciosCache[tipoVehiculo]) { _ultimoPrecioEsLocal = _preciosCache[tipoVehiculo]._esEstimado; return _preciosCache[tipoVehiculo]; }
   try {
     const resp = await fetch(
-      `${SUPABASE_URL}/rest/v1/precios_gaga?tipo_vehiculo=eq.${encodeURIComponent(tipoVehiculo)}&order=km_intervalo.asc`,
-      { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+      `${API_URL}/precios_gaga?tipo_vehiculo=eq.${encodeURIComponent(tipoVehiculo)}&order=km_intervalo.asc`
     );
-    if (!resp.ok) throw new Error(`Supabase ${resp.status}: ${await resp.text()}`);
+    if (!resp.ok) throw new Error(`API ${resp.status}: ${await resp.text()}`);
     const data = await resp.json();
-    if (!Array.isArray(data) || data.length === 0) throw new Error('Supabase sin datos para este vehículo');
-    data._local = false;
+    if (!Array.isArray(data) || data.length === 0) throw new Error('Sin datos para este vehículo en la base');
+    // es_estimado viene de la base (true mientras no se capturen precios oficiales)
+    data._esEstimado = data.some(r => r.es_estimado);
     _preciosCache[tipoVehiculo] = data;
-    _ultimoPrecioEsLocal = false;
+    _ultimoPrecioEsLocal = data._esEstimado;
     return data;
   } catch (e) {
-    console.warn('Supabase no disponible, usando precios locales de respaldo:', e.message);
+    console.warn('API de precios no disponible, usando respaldo local en el navegador:', e.message);
     const local = preciosLocal(tipoVehiculo);
-    local._local = true;
+    local._esEstimado = true;
     _preciosCache[tipoVehiculo] = local;
     _ultimoPrecioEsLocal = true;
     return local;

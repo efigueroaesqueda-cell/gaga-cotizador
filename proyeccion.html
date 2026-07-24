@@ -298,9 +298,10 @@ td{padding:9px 12px;vertical-align:middle}
 </div>
 
 <script>
-const SUPABASE_URL      = 'https://bgpugtgjbfseqwwcwpyd.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJncHVndGdqYmZzZXF3d2N3cHlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NjM4MjEsImV4cCI6MjA5ODEzOTgyMX0.iYp-y00qYWv9uvJX73eAASeKy5qbonXN3Jbwd4qRxPM';
-const HEADERS = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` };
+// API propia en Railway (Postgres + PostgREST) — reemplaza al Supabase de
+// GAGA que se dio de baja por inactividad. Ver memoria feedback_dar_raiz_a_proyectos.
+const API_URL = 'https://flotillas-api-production.up.railway.app';
+const HEADERS = {};
 
 // ── BASE DE DATOS DE UNIDADES (igual que flotilla.html) ───────────────────
 const DB = {
@@ -498,7 +499,7 @@ let kmData = {};
 let demoMode = false;
 
 async function init() {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/kilometrajes?select=eco,km_actual,km_ultimo_servicio`, { headers: HEADERS });
+  const r = await fetch(`${API_URL}/kilometrajes?select=eco,km_actual,km_ultimo_servicio`, { headers: HEADERS });
   const rows = await r.json();
   if (Array.isArray(rows)) rows.forEach(r => {
     kmData[r.eco] = { km: r.km_actual, kmUltimo: r.km_ultimo_servicio };
