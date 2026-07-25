@@ -696,12 +696,31 @@ let _preciosCache = {};
 
 // ── CARGA INICIAL ─────────────────────────────────────────────────────────
 async function init() {
-  const r = await fetch(`${API_URL}/kilometrajes?select=eco,km_actual,km_ultimo_servicio,fecha_captura`, { headers: HEADERS });
+  const r = await fetch(`${API_URL}/kilometrajes?select=eco,km_actual,km_ultimo_servicio,fecha_captura,motor`, { headers: HEADERS });
   const rows = await r.json();
   if (Array.isArray(rows)) rows.forEach(r => {
-    kmData[r.eco] = { km: r.km_actual, fecha: r.fecha_captura, kmUltimo: r.km_ultimo_servicio };
+    kmData[r.eco] = { km: r.km_actual, fecha: r.fecha_captura, kmUltimo: r.km_ultimo_servicio, motor: r.motor };
   });
   renderTabla();
+}
+
+// ── MOTOR PENDIENTE: alguien lo captura al ver la unidad, no se inventa ────
+async function guardarMotor(eco, valor) {
+  valor = (valor || '').trim();
+  if (!valor) return;
+  const r = await fetch(`${API_URL}/kilometrajes?on_conflict=eco`, {
+    method: 'POST',
+    headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ eco, motor: valor, fecha_captura: new Date().toISOString() })
+  });
+  if (r.ok || r.status === 201 || r.status === 204) {
+    kmData[eco] = kmData[eco] || {};
+    kmData[eco].motor = valor;
+    toast(`✅ Motor de ${eco} guardado`, false);
+    abrirFicha(eco);
+  } else {
+    toast(`⚠️ Error al guardar motor de ${eco}`, true);
+  }
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
@@ -1104,6 +1123,12 @@ function abrirFicha(eco) {
   const kmUltimo= ultimoEdits[eco]!== undefined ? ultimoEdits[eco]: (kmData[eco]?.kmUltimo ?? null);
   const fecha   = kmData[eco]?.fecha ? new Date(kmData[eco].fecha).toLocaleDateString('es-MX') : '—';
   const tv      = getTipoVehiculo(u);
+  const motorPendiente = u.motor === 'Pendiente confirmar (VIN nuevo)';
+  const motorGuardado  = kmData[eco]?.motor;
+  const motorHtml = (motorPendiente && !motorGuardado)
+    ? `<input class="km-input" style="width:100%;font-size:11px" type="text" placeholder="Escribe el motor real y da clic fuera"
+        onblur="guardarMotor('${eco}', this.value)" onclick="event.stopPropagation()">`
+    : `<div class="sp-val" style="font-size:11px">${motorGuardado || u.motor}</div>`;
 
   // Header
   document.getElementById('sp-eco').textContent    = eco;
@@ -1169,7 +1194,7 @@ function abrirFicha(eco) {
         <div class="sp-item"><div class="sp-lbl">Marca</div><div class="sp-val">${u.marca}</div></div>
         <div class="sp-item"><div class="sp-lbl">Año</div><div class="sp-val">${u.año}</div></div>
         <div class="sp-item"><div class="sp-lbl">Modelo</div><div class="sp-val">${u.modelo}</div></div>
-        <div class="sp-item"><div class="sp-lbl">Motor</div><div class="sp-val" style="font-size:11px">${u.motor}</div></div>
+        <div class="sp-item"><div class="sp-lbl">Motor${motorPendiente && !motorGuardado ? ' — captúralo aquí' : ''}</div>${motorHtml}</div>
         <div class="sp-item"><div class="sp-lbl">Placas</div><div class="sp-val" style="font-family:monospace">${u.placas}</div></div>
         <div class="sp-item"><div class="sp-lbl">KM Actual</div><div class="sp-val">${km !== null ? fmtKm(km) : '—'}</div></div>
         <div class="sp-item"><div class="sp-lbl">Último Servicio KM</div><div class="sp-val">${kmUltimo ? fmtKm(kmUltimo) : '—'}</div></div>
