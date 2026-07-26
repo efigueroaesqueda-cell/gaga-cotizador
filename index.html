@@ -1137,23 +1137,34 @@ function onAgModoChange() {
   document.getElementById('ag-problema').style.display = modo === 'problema' ? 'block' : 'none';
 }
 
+const CUPO_TOTAL_DIA = 15; // tope de citas/día en todo el taller (Enrique, 2026-07-26)
+
 async function onAgFechaChange() {
   const fecha = document.getElementById('ag-fecha').value;
   const box = document.getElementById('ag-disponibilidad');
+  window._agCupoLleno = false;
   if (!fecha) { box.textContent = ''; return; }
   const dow = new Date(fecha + 'T12:00:00').getDay();
-  if (dow === 0) { box.textContent = '⚠️ Domingo cerrado — elige otro día.'; box.style.color = '#e74c3c'; return; }
+  if (dow === 0) { box.textContent = '⚠️ Domingo cerrado — elige otro día.'; box.style.color = '#e74c3c'; window._agCupoLleno = true; return; }
   box.style.color = '#888';
   box.textContent = 'Consultando disponibilidad…';
   try {
     const r = await fetch(`${API_URL}/citas?fecha=eq.${fecha}&select=id`);
     const rows = await r.json();
     const n = Array.isArray(rows) ? rows.length : 0;
-    box.textContent = n === 0 ? 'Sin citas agendadas ese día todavía.' : `Ya hay ${n} cita${n===1?'':'s'} agendada${n===1?'':'s'} ese día.`;
+    if (n >= CUPO_TOTAL_DIA) {
+      window._agCupoLleno = true;
+      box.style.color = '#e74c3c';
+      box.innerHTML = `🔴 Sin cupo disponible ese día (${n}/${CUPO_TOTAL_DIA}) — es una urgencia, contáctanos directo: <a href="tel:3122259113" style="color:#e74c3c;font-weight:700">📞 312 225 91 13</a>`;
+    } else {
+      box.style.color = '#888';
+      box.textContent = n === 0 ? 'Sin citas agendadas ese día todavía.' : `Ya hay ${n} de ${CUPO_TOTAL_DIA} citas agendadas ese día.`;
+    }
   } catch(e) { box.textContent = ''; }
 }
 
 async function enviarAgendar() {
+  if (window._agCupoLleno) { toast('⚠️ Ese día ya no tiene cupo — llama directo al 312 225 91 13', true); return; }
   const eco = document.getElementById('ag-eco').value;
   const unidadDesc = document.getElementById('ag-unidad-desc').value.trim();
   const fecha = document.getElementById('ag-fecha').value;
