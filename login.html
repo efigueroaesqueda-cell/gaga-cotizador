@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Iniciar sesión — Portal de Flotillas · Henry's Diagnostics</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0d0d0d;color:#eee}
+
+canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+#login{
+  position:fixed;inset:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px;
+}
+
+.glass{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(200,169,81,.22);
+  border-radius:22px;
+  padding:44px 42px 38px;
+  text-align:center;
+  backdrop-filter:blur(20px);
+  box-shadow:0 0 70px rgba(200,169,81,.07),0 28px 70px rgba(0,0,0,.65);
+  max-width:400px;width:100%;
+}
+
+.logo-wrap img{height:56px;width:auto;margin:0 auto 18px;display:block}
+.bienvenido-label{
+  font-size:10px;letter-spacing:3.5px;text-transform:uppercase;
+  color:#c8a951;margin-bottom:10px;opacity:.85;
+}
+.portal-titulo{font-size:21px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:8px}
+.portal-sub{font-size:12px;color:#777;margin-bottom:26px;line-height:1.6}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(200,169,81,.28),transparent);margin-bottom:26px}
+
+.campo{text-align:left;margin-bottom:16px}
+.campo label{
+  display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;
+  color:#888;margin-bottom:6px;
+}
+.campo input{
+  width:100%;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:13px 14px;
+  font-size:14px;color:#eee;font-family:inherit;
+  transition:border-color .2s,background .2s;
+}
+.campo input::placeholder{color:#555}
+.campo input:focus{
+  outline:none;border-color:rgba(200,169,81,.55);
+  background:rgba(200,169,81,.05);
+}
+
+.error-box{
+  display:none;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.35);
+  color:#e74c3c;font-size:12px;border-radius:10px;padding:10px 14px;
+  margin-bottom:16px;text-align:left;
+}
+.error-box.visible{display:block}
+
+.btn-entrar{
+  width:100%;
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(135deg,#c8a951 0%,#a07820 100%);
+  color:#111;font-size:14px;font-weight:800;
+  padding:14px 20px;border-radius:40px;border:none;cursor:pointer;
+  letter-spacing:.5px;margin-top:6px;
+  box-shadow:0 4px 28px rgba(200,169,81,.38);
+  transition:transform .2s,box-shadow .2s,opacity .2s;
+}
+.btn-entrar:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(200,169,81,.55)}
+.btn-entrar:active{transform:translateY(0)}
+.btn-entrar:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none}
+
+.arrow-icon{font-size:16px;transition:transform .2s}
+.btn-entrar:hover .arrow-icon{transform:translateX(4px)}
+
+.hd-footer{margin-top:26px;font-size:11px;color:#3a3a3a;letter-spacing:.4px}
+.hd-footer span{color:#555}
+
+@media(max-width:460px){
+  .glass{padding:32px 24px 28px}
+  .portal-titulo{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div id="login">
+  <form class="glass" id="form-login" autocomplete="on">
+    <div class="logo-wrap">
+      <img src="imagenes_de_henry_pdfs/logo_sm.png" alt="Henry's Diagnostics">
+    </div>
+    <div class="bienvenido-label">Henry's Diagnostics</div>
+    <div class="portal-titulo">Portal de Flotillas</div>
+    <p class="portal-sub">Inicia sesión para ver tus unidades, agendar<br>citas y dar seguimiento a tu mantenimiento</p>
+    <div class="divider"></div>
+
+    <div class="error-box" id="login-error"></div>
+
+    <div class="campo">
+      <label for="in-compania">Compañía</label>
+      <input type="text" id="in-compania" placeholder="Nombre de tu empresa" autocomplete="organization" required>
+    </div>
+    <div class="campo">
+      <label for="in-usuario">Usuario</label>
+      <input type="text" id="in-usuario" placeholder="Tu usuario" autocomplete="username" required>
+    </div>
+    <div class="campo">
+      <label for="in-password">Contraseña</label>
+      <input type="password" id="in-password" placeholder="••••••••" autocomplete="current-password" required>
+    </div>
+
+    <button type="submit" class="btn-entrar" id="btn-login">
+      <span id="btn-login-txt">Entrar</span> <span class="arrow-icon">→</span>
+    </button>
+
+    <div class="hd-footer">Administrado por <span>Henry's Diagnostics</span> · Colima, Col.</div>
+  </form>
+</div>
+
+<script>
+// ── PARTÍCULAS (mismo fondo que bienvenida.html) ─────────────────────────
+const canvas = document.getElementById('bg');
+const ctx    = canvas.getContext('2d');
+let W, H;
+function resize(){ W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+resize(); window.addEventListener('resize', resize);
+const pts = Array.from({length:100},()=>({
+  x: Math.random()*1000, y: Math.random()*1000,
+  vx:(Math.random()-.5)*.25, vy:-(Math.random()*.35+.08),
+  r: Math.random()*1.4+.3, o: Math.random()*.45+.08
+}));
+function loop(){
+  ctx.clearRect(0,0,W,H);
+  pts.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.y<-6){p.y=H+6;p.x=Math.random()*W}
+    if(p.x<-6)p.x=W+6; if(p.x>W+6)p.x=-6;
+  });
+  for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);
+    if(d<110){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);
+      ctx.strokeStyle=`rgba(200,169,81,${.055*(1-d/110)})`;ctx.lineWidth=.5;ctx.stroke()}
+  }
+  pts.forEach(p=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(200,169,81,${p.o})`;ctx.fill();
+  });
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────
+const API_URL = 'https://flotillas-api-production.up.railway.app';
+
+// Si ya hay sesión activa, saltar directo al portal.
+if (sessionStorage.getItem('sesion_flotillas')) {
+  location.href = 'bienvenida.html';
+}
+
+document.getElementById('form-login').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const compania = document.getElementById('in-compania').value.trim();
+  const usuario  = document.getElementById('in-usuario').value.trim();
+  const password = document.getElementById('in-password').value;
+  const errBox   = document.getElementById('login-error');
+  const btn      = document.getElementById('btn-login');
+  const btnTxt   = document.getElementById('btn-login-txt');
+
+  errBox.classList.remove('visible');
+  btn.disabled = true;
+  btnTxt.textContent = 'Verificando…';
+
+  try {
+    const r = await fetch(`${API_URL}/rpc/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_compania: compania, p_usuario: usuario, p_password: password })
+    });
+    const rows = await r.json();
+    if (Array.isArray(rows) && rows.length) {
+      sessionStorage.setItem('sesion_flotillas', JSON.stringify(rows[0]));
+      btnTxt.textContent = 'Bienvenida' + (rows[0].nombre ? `, ${rows[0].nombre}` : '') + '…';
+      setTimeout(() => { location.href = 'bienvenida.html'; }, 500);
+    } else {
+      errBox.textContent = 'Compañía, usuario o contraseña incorrectos.';
+      errBox.classList.add('visible');
+      btn.disabled = false;
+      btnTxt.textContent = 'Entrar';
+    }
+  } catch (e) {
+    errBox.textContent = 'No se pudo conectar. Intenta de nuevo en un momento.';
+    errBox.classList.add('visible');
+    btn.disabled = false;
+    btnTxt.textContent = 'Entrar';
+  }
+});
+</script>
+</body>
+</html>
