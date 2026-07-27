@@ -1374,13 +1374,17 @@ async function enviarAgendar() {
 }
 
 // ── MIS CITAS ─────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 async function abrirMisCitas() {
   document.getElementById('mis-citas-modal').classList.add('visible');
   const body = document.getElementById('mis-citas-body');
   body.innerHTML = '<div class="loading-msg">Cargando…</div>';
   const sesion = JSON.parse(sessionStorage.getItem('sesion_flotillas') || 'null');
   try {
-    let url = `${API_URL}/citas?order=fecha.asc,hora.asc&select=eco,unidad_desc,fecha,hora,estado,km_reportado`;
+    let url = `${API_URL}/citas?order=fecha.asc,hora.asc&select=eco,unidad_desc,operador,fecha,hora,estado,km_reportado,extras,descripcion_problema`;
     if (sesion && sesion.compania) url += `&compania=eq.${encodeURIComponent(sesion.compania)}`;
     const r = await fetch(url);
     const rows = await r.json();
@@ -1390,14 +1394,24 @@ async function abrirMisCitas() {
     }
     const hoy = new Date().toISOString().split('T')[0];
     body.innerHTML = rows.map(c => {
-      const unidad = c.eco ? (DB[c.eco] ? `${c.eco} — ${DB[c.eco].marca} ${DB[c.eco].modelo}` : c.eco) : (c.unidad_desc || 'Unidad nueva');
+      const unidad = c.eco ? (DB[c.eco] ? `${escHtml(c.eco)} — ${escHtml(DB[c.eco].marca)} ${escHtml(DB[c.eco].modelo)}` : escHtml(c.eco)) : escHtml(c.unidad_desc || 'Unidad nueva');
       const pasada = c.fecha < hoy;
-      return `<div class="mc-row">
-        <div>
-          <div style="color:#eee;font-weight:600">${unidad}</div>
-          <div style="color:#888;margin-top:2px">${new Date(c.fecha+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})} · ${c.hora}${c.km_reportado ? ' · '+fmtKm(c.km_reportado) : ''}</div>
+      const detalles = [];
+      if (c.operador) detalles.push(`<span style="color:#888">Operador:</span> ${escHtml(c.operador)}`);
+      if (c.extras) detalles.push(`<span style="color:#888">Extras pedidos:</span> ${escHtml(c.extras)}`);
+      if (c.descripcion_problema) detalles.push(`<span style="color:#888">Queja/observación:</span> ${escHtml(c.descripcion_problema)}`);
+      const detallesHtml = detalles.length
+        ? `<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #2a2a2a;font-size:11px;color:#ccc;line-height:1.7">${detalles.join('<br>')}</div>`
+        : '';
+      return `<div class="mc-row" style="flex-direction:column;align-items:stretch">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="color:#eee;font-weight:600">${unidad}</div>
+            <div style="color:#888;margin-top:2px">${new Date(c.fecha+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})} · ${c.hora}${c.km_reportado ? ' · '+fmtKm(c.km_reportado) : ''}</div>
+          </div>
+          <span class="mc-estado ${pasada ? 'confirmada' : (c.estado||'pendiente')}">${pasada ? 'Atendida' : (c.estado||'pendiente')}</span>
         </div>
-        <span class="mc-estado ${pasada ? 'confirmada' : (c.estado||'pendiente')}">${pasada ? 'Atendida' : (c.estado||'pendiente')}</span>
+        ${detallesHtml}
       </div>`;
     }).join('');
   } catch (e) {
