@@ -86,7 +86,7 @@ END $$;
 GRANT USAGE ON SCHEMA public TO web_anon;
 GRANT SELECT ON precios_gaga TO web_anon;
 GRANT SELECT, INSERT, UPDATE ON kilometrajes TO web_anon;
-GRANT SELECT, INSERT ON citas TO web_anon;
+GRANT SELECT, INSERT, UPDATE ON citas TO web_anon;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO web_anon;
 GRANT EXECUTE ON FUNCTION login(text,text,text) TO web_anon;
 

@@ -242,6 +242,9 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
     </a>
 
   </div>
+  <a class="btn-entrar" id="btn-agendar-inicio" href="flotilla.html?agendar=1" style="margin-top:36px;font-size:13px;padding:13px 36px">
+    📅 Agendar una cita <span class="arrow-icon">→</span>
+  </a>
   <div class="mod-footer">Henry's Diagnostics · Sistema de Gestión de Flotillas · v1.0</div>
 </div>
 
@@ -294,6 +297,8 @@ if(_real){
     const el = document.getElementById(id);
     if(el) el.href = el.href + '?real=1';
   });
+  const btnAg = document.getElementById('btn-agendar-inicio');
+  if(btnAg) btnAg.href = btnAg.href + '&real=1';
 } else {
   // mostrar aviso de que se está compartiendo en modo demo
   document.addEventListener('DOMContentLoaded',()=>{
@@ -315,4 +320,3 @@ function entrar(){
 </script>
 </body>
 </html>
-      

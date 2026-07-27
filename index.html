@@ -283,12 +283,12 @@ body {
 @media(max-width:480px){.ag-grid2{grid-template-columns:1fr}.ag-grid3{grid-template-columns:1fr}}
 .ag-chip{display:inline-flex;align-items:center;gap:6px;background:#2a2a1a;border:1px solid #4a3f20;color:#e8d9a8;padding:4px 6px 4px 10px;border-radius:14px;font-size:11px}
 .ag-chip button{background:none;border:none;color:#e8d9a8;cursor:pointer;font-size:13px;line-height:1;padding:2px}
-.fab-citas{position:fixed;bottom:24px;right:170px;z-index:950;background:#222;color:#c8a951;border:1px solid #c8a951;padding:14px 18px;border-radius:30px;font-size:13px;font-weight:700;letter-spacing:.3px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.4);transition:transform .15s,box-shadow .15s}
+.fab-citas{position:fixed;bottom:24px;right:200px;z-index:950;background:#222;color:#c8a951;border:1px solid #c8a951;padding:14px 18px;border-radius:30px;font-size:13px;font-weight:700;letter-spacing:.3px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.4);transition:transform .15s,box-shadow .15s}
 .fab-citas:hover{transform:translateY(-2px);background:#2a2a1a}
 @media(max-width:600px){.fab-citas{right:14px;bottom:70px;padding:11px 16px;font-size:12px}}
-.mc-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #2a2a2a;font-size:12px}
+.mc-row{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-bottom:1px solid #2a2a2a;font-size:13px}
 .mc-row:last-child{border-bottom:none}
-.mc-estado{padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+.mc-estado{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase}
 .mc-estado.pendiente{background:#3a2a00;color:#f39c12}
 .mc-estado.confirmada{background:#1a4a2a;color:#2ecc71}
 .mc-estado.cancelada{background:#3a0a0a;color:#e74c3c}
@@ -605,7 +605,7 @@ body {
 <div class="modal-overlay" id="agendar-modal" onclick="if(event.target===this)cerrarAgendar()">
   <div class="modal" style="width:min(520px,96vw)">
     <div class="modal-hdr">
-      <span class="modal-hdr-title">📅 Agendar cita</span>
+      <span class="modal-hdr-title" id="agendar-titulo">📅 Agendar cita</span>
       <button class="modal-close" onclick="cerrarAgendar()">✕</button>
     </div>
     <div class="modal-body">
@@ -625,7 +625,7 @@ body {
       </div>
       <div class="ag-field">
         <label class="ag-lbl">¿Quién trae la unidad? (operador)</label>
-        <input id="ag-operador" class="ag-input" type="text" placeholder="Nombre de quien maneja la unidad">
+        <input id="ag-operador" class="ag-input" type="text" placeholder="Ej. Luis Fernando Hernández">
       </div>
       <div class="ag-grid2">
         <div class="ag-field">
@@ -648,10 +648,11 @@ body {
       </div>
       <div id="ag-disponibilidad" style="font-size:11px;color:#888;margin:-4px 0 12px"></div>
       <div class="ag-field">
-        <label class="ag-lbl">¿Sabes a qué kilometraje va tu unidad?</label>
+        <label class="ag-lbl">Kilometraje del servicio</label>
+        <div style="font-size:12px;color:#999;margin-bottom:10px;line-height:1.5">Selecciona el kilometraje de tu unidad para saber qué servicio corresponde. Si no lo sabes, puedes dejarlo en blanco y describir el problema.</div>
         <div style="display:flex;gap:16px;margin-bottom:8px;font-size:13px;color:#ccc">
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="ag-modo" value="km" checked onchange="onAgModoChange()"> Sí, sé el kilometraje</label>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="ag-modo" value="problema" onchange="onAgModoChange()"> No sé, mejor describo el problema</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="ag-modo" value="km" checked onchange="onAgModoChange()"> Conozco el kilometraje</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="ag-modo" value="problema" onchange="onAgModoChange()"> No lo sé, describir el problema</label>
         </div>
         <select id="ag-km" class="ag-input" onchange="onAgKmChange()">
           <option value="">— Selecciona kilometraje —</option>
@@ -670,7 +671,7 @@ body {
         <label class="ag-lbl">Queja u observación del operador <span style="color:#666;font-weight:400;text-transform:none">(opcional si ya sabes el kilometraje)</span></label>
         <textarea id="ag-problema" class="ag-input" style="min-height:60px;resize:vertical" placeholder="Cuéntanos qué le pasa a la unidad, ruidos, quejas del operador…"></textarea>
       </div>
-      <button class="btn-demo" style="width:100%;background:#c8a951;color:#111;border-style:solid;font-size:13px;padding:10px" onclick="enviarAgendar()">Agendar cita</button>
+      <button class="btn-demo" style="width:100%;background:#c8a951;color:#111;border-style:solid;font-size:13px;padding:10px" onclick="enviarAgendar()" id="agendar-btn">Agendar cita</button>
     </div>
   </div>
 </div>
@@ -1156,6 +1157,14 @@ function poblarAgKm() {
   }
 }
 
+// Día hábil siguiente (mañana, o el lunes si mañana es domingo) — precarga la fecha por default.
+function siguienteDiaHabil() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  while (d.getDay() === 0) d.setDate(d.getDate() + 1);
+  return d.toISOString().split('T')[0];
+}
+
 function abrirAgendar() {
   const sel = document.getElementById('ag-eco');
   if (sel.options.length <= 2) {
@@ -1168,10 +1177,8 @@ function abrirAgendar() {
   }
   poblarAgKm();
   document.getElementById('ag-fecha').min = new Date().toISOString().split('T')[0];
-  const sesion = JSON.parse(sessionStorage.getItem('sesion_flotillas') || 'null');
-  if (sesion && sesion.nombre && !document.getElementById('ag-operador').value) {
-    document.getElementById('ag-operador').value = sesion.nombre;
-  }
+  const fechaInput = document.getElementById('ag-fecha');
+  if (!fechaInput.value) { fechaInput.value = siguienteDiaHabil(); onAgFechaChange(); }
   document.getElementById('agendar-modal').classList.add('visible');
 }
 
@@ -1193,6 +1200,9 @@ function cerrarAgendar() {
   document.getElementById('ag-extras-wrap').style.display = 'none';
   agExtras = [];
   renderAgExtras();
+  agEditandoId = null;
+  document.getElementById('agendar-titulo').textContent = '📅 Agendar cita';
+  document.getElementById('agendar-btn').textContent = 'Agendar cita';
 }
 
 function onAgEcoChange() {
@@ -1211,6 +1221,7 @@ function onAgModoChange() {
 
 // ── QUÉ INCLUYE EL SERVICIO + EXTRAS ─────────────────────────────────────
 let agExtras = [];
+let agEditandoId = null; // id de la cita si se está editando una existente (no agendando una nueva)
 
 async function onAgKmChange() {
   const km = parseInt(document.getElementById('ag-km').value);
@@ -1322,18 +1333,56 @@ async function enviarAgendar() {
     compania: sesion ? sesion.compania : null,
   };
 
-  const r = await fetch(`${API_URL}/citas`, {
-    method: 'POST',
+  const editando = !!agEditandoId;
+  const r = await fetch(`${API_URL}/citas${editando ? '?id=eq.'+agEditandoId : ''}`, {
+    method: editando ? 'PATCH' : 'POST',
     headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
     body: JSON.stringify(payload)
   });
 
   if (r.ok || r.status === 201 || r.status === 204) {
-    toast(`✅ Cita agendada para ${fecha} a las ${hora}`, false);
+    toast(editando ? '✅ Cita actualizada' : `✅ Cita agendada para ${fecha} a las ${hora}`, false);
     cerrarAgendar();
   } else {
-    toast('⚠️ Error al agendar, intenta de nuevo', true);
+    toast(editando ? '⚠️ Error al guardar los cambios' : '⚠️ Error al agendar, intenta de nuevo', true);
   }
+}
+
+// ── EDITAR UNA CITA EXISTENTE (cliente corrige, o Henry's corrige al recibir la unidad) ──
+function editarCita(i) {
+  const c = window._misCitasRows[i];
+  if (!c) return;
+  cerrarMisCitas();
+  abrirAgendar();
+  agEditandoId = c.id;
+  document.getElementById('agendar-titulo').textContent = '✏️ Editar cita';
+  document.getElementById('agendar-btn').textContent = 'Guardar cambios';
+
+  if (c.eco) {
+    document.getElementById('ag-eco').value = c.eco;
+  } else {
+    document.getElementById('ag-eco').value = '__nueva__';
+    document.getElementById('ag-modelo').value = c.unidad_desc || '';
+  }
+  onAgEcoChange();
+
+  document.getElementById('ag-operador').value = c.operador || '';
+  document.getElementById('ag-fecha').value = c.fecha;
+  onAgFechaChange();
+  document.getElementById('ag-hora').value = c.hora;
+
+  if (c.km_reportado) {
+    document.querySelector('input[name="ag-modo"][value="km"]').checked = true;
+    document.getElementById('ag-km').value = c.km_reportado;
+  } else {
+    document.querySelector('input[name="ag-modo"][value="problema"]').checked = true;
+  }
+  onAgModoChange();
+  onAgKmChange();
+
+  document.getElementById('ag-problema').value = c.descripcion_problema || '';
+  agExtras = c.extras ? c.extras.split(';').map(s => s.trim()).filter(Boolean) : [];
+  renderAgExtras();
 }
 
 // ── MIS CITAS ─────────────────────────────────────────────────────────────
@@ -1347,7 +1396,7 @@ async function abrirMisCitas() {
   body.innerHTML = '<div class="loading-msg">Cargando…</div>';
   const sesion = JSON.parse(sessionStorage.getItem('sesion_flotillas') || 'null');
   try {
-    let url = `${API_URL}/citas?order=fecha.asc,hora.asc&select=eco,unidad_desc,operador,fecha,hora,estado,km_reportado,extras,descripcion_problema`;
+    let url = `${API_URL}/citas?order=fecha.asc,hora.asc&select=id,eco,unidad_desc,operador,fecha,hora,estado,km_reportado,extras,descripcion_problema`;
     if (sesion && sesion.compania) url += `&compania=eq.${encodeURIComponent(sesion.compania)}`;
     const r = await fetch(url);
     const rows = await r.json();
@@ -1355,8 +1404,9 @@ async function abrirMisCitas() {
       body.innerHTML = '<div class="loading-msg">Todavía no tienes citas agendadas.</div>';
       return;
     }
+    window._misCitasRows = rows;
     const hoy = new Date().toISOString().split('T')[0];
-    body.innerHTML = rows.map(c => {
+    body.innerHTML = rows.map((c, i) => {
       const unidad = c.eco ? (DB[c.eco] ? `${escHtml(c.eco)} — ${escHtml(DB[c.eco].marca)} ${escHtml(DB[c.eco].modelo)}` : escHtml(c.eco)) : escHtml(c.unidad_desc || 'Unidad nueva');
       const pasada = c.fecha < hoy;
       const detalles = [];
@@ -1364,15 +1414,18 @@ async function abrirMisCitas() {
       if (c.extras) detalles.push(`<span style="color:#888">Extras pedidos:</span> ${escHtml(c.extras)}`);
       if (c.descripcion_problema) detalles.push(`<span style="color:#888">Queja/observación:</span> ${escHtml(c.descripcion_problema)}`);
       const detallesHtml = detalles.length
-        ? `<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #2a2a2a;font-size:11px;color:#ccc;line-height:1.7">${detalles.join('<br>')}</div>`
+        ? `<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #2a2a2a;font-size:12.5px;color:#ccc;line-height:1.8">${detalles.join('<br>')}</div>`
         : '';
-      return `<div class="mc-row" style="flex-direction:column;align-items:stretch">
+      return `<div class="mc-row" style="flex-direction:column;align-items:stretch;cursor:pointer" onclick="editarCita(${i})" title="Editar esta cita">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <div style="color:#eee;font-weight:600">${unidad}</div>
+            <div style="color:#eee;font-weight:600;font-size:14px">${unidad}</div>
             <div style="color:#888;margin-top:2px">${new Date(c.fecha+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})} · ${c.hora}${c.km_reportado ? ' · '+fmtKm(c.km_reportado) : ''}</div>
           </div>
-          <span class="mc-estado ${pasada ? 'confirmada' : (c.estado||'pendiente')}">${pasada ? 'Atendida' : (c.estado||'pendiente')}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="mc-estado ${pasada ? 'confirmada' : (c.estado||'pendiente')}">${pasada ? 'Atendida' : (c.estado||'pendiente')}</span>
+            <span style="color:#555;font-size:12px">✎</span>
+          </div>
         </div>
         ${detallesHtml}
       </div>`;
