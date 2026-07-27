@@ -279,7 +279,19 @@ body {
 .ag-input{width:100%;background:#2a2a2a;border:1px solid #444;color:#eee;padding:9px 12px;border-radius:6px;font-size:13px;font-family:inherit}
 .ag-input:focus{outline:none;border-color:var(--amarillo)}
 .ag-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:480px){.ag-grid2{grid-template-columns:1fr}}
+.ag-grid3{display:grid;grid-template-columns:1.3fr 1.3fr .8fr;gap:12px}
+@media(max-width:480px){.ag-grid2{grid-template-columns:1fr}.ag-grid3{grid-template-columns:1fr}}
+.ag-chip{display:inline-flex;align-items:center;gap:6px;background:#2a2a1a;border:1px solid #4a3f20;color:#e8d9a8;padding:4px 6px 4px 10px;border-radius:14px;font-size:11px}
+.ag-chip button{background:none;border:none;color:#e8d9a8;cursor:pointer;font-size:13px;line-height:1;padding:2px}
+.fab-citas{position:fixed;bottom:24px;right:170px;z-index:950;background:#222;color:#c8a951;border:1px solid #c8a951;padding:14px 18px;border-radius:30px;font-size:13px;font-weight:700;letter-spacing:.3px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.4);transition:transform .15s,box-shadow .15s}
+.fab-citas:hover{transform:translateY(-2px);background:#2a2a1a}
+@media(max-width:600px){.fab-citas{right:14px;bottom:70px;padding:11px 16px;font-size:12px}}
+.mc-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #2a2a2a;font-size:12px}
+.mc-row:last-child{border-bottom:none}
+.mc-estado{padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+.mc-estado.pendiente{background:#3a2a00;color:#f39c12}
+.mc-estado.confirmada{background:#1a4a2a;color:#2ecc71}
+.mc-estado.cancelada{background:#3a0a0a;color:#e74c3c}
 .btn-demo{background:transparent;border:1px dashed var(--amarillo);color:var(--amarillo);padding:5px 14px;border-radius:16px;font-size:11px;cursor:pointer;font-weight:600}
 </style>
 </head>
@@ -587,6 +599,7 @@ body {
 
 <!-- BOTÓN FLOTANTE AGENDAR -->
 <button class="fab-agendar" onclick="abrirAgendar()" title="Agendar una cita">📅 Agendar cita</button>
+<button class="fab-citas" onclick="abrirMisCitas()" title="Ver tus citas agendadas">🗓️ Mis citas</button>
 
 <!-- MODAL AGENDAR CITA -->
 <div class="modal-overlay" id="agendar-modal" onclick="if(event.target===this)cerrarAgendar()">
@@ -600,14 +613,19 @@ body {
         <label class="ag-lbl">Unidad</label>
         <select id="ag-eco" class="ag-input" onchange="onAgEcoChange()">
           <option value="">— Selecciona tu unidad —</option>
-          <option value="__nueva__">➕ No está en la lista / unidad nueva</option>
+          <option value="__nueva__">➕ No está registrada</option>
         </select>
       </div>
       <div id="ag-nueva-wrap" style="display:none">
-        <div class="ag-field">
-          <label class="ag-lbl">Describe la unidad (marca, modelo, placas)</label>
-          <input id="ag-unidad-desc" class="ag-input" type="text" placeholder="Ej. Nissan NP300 2023, placas JD-1234-A">
+        <div class="ag-grid3">
+          <div class="ag-field"><label class="ag-lbl">Armadora</label><input id="ag-armadora" class="ag-input" type="text" placeholder="Ej. Nissan"></div>
+          <div class="ag-field"><label class="ag-lbl">Modelo</label><input id="ag-modelo" class="ag-input" type="text" placeholder="Ej. NP300"></div>
+          <div class="ag-field"><label class="ag-lbl">Año</label><input id="ag-anio" class="ag-input" type="text" placeholder="2023"></div>
         </div>
+      </div>
+      <div class="ag-field">
+        <label class="ag-lbl">¿Quién trae la unidad? (operador)</label>
+        <input id="ag-operador" class="ag-input" type="text" placeholder="Nombre de quien maneja la unidad">
       </div>
       <div class="ag-grid2">
         <div class="ag-field">
@@ -635,10 +653,37 @@ body {
           <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="ag-modo" value="km" checked onchange="onAgModoChange()"> Sí, sé el kilometraje</label>
           <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="ag-modo" value="problema" onchange="onAgModoChange()"> No sé, mejor describo el problema</label>
         </div>
-        <input id="ag-km" class="ag-input" type="number" min="0" placeholder="Ej. 40000">
-        <textarea id="ag-problema" class="ag-input" style="display:none;min-height:70px;resize:vertical" placeholder="Cuéntanos qué le pasa a la unidad…"></textarea>
+        <select id="ag-km" class="ag-input" onchange="onAgKmChange()">
+          <option value="">— Selecciona kilometraje —</option>
+        </select>
+        <div id="ag-servicio-incluye" style="display:none;margin-top:10px;background:#1e1e10;border:1px solid #3a3320;border-radius:8px;padding:10px 12px;font-size:12px;color:#ccc"></div>
+        <div id="ag-extras-wrap" style="display:none;margin-top:10px">
+          <label class="ag-lbl">¿Quieres agregar algo extra a este servicio?</label>
+          <div style="display:flex;gap:6px">
+            <input id="ag-extra-input" class="ag-input" type="text" placeholder="Ej. Cambiar limpiadores" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();agregarExtra();}">
+            <button type="button" class="btn-demo" style="padding:0 14px" onclick="agregarExtra()">+ Agregar</button>
+          </div>
+          <div id="ag-extras-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+        </div>
+      </div>
+      <div class="ag-field">
+        <label class="ag-lbl">Queja u observación del operador <span style="color:#666;font-weight:400;text-transform:none">(opcional si ya sabes el kilometraje)</span></label>
+        <textarea id="ag-problema" class="ag-input" style="min-height:60px;resize:vertical" placeholder="Cuéntanos qué le pasa a la unidad, ruidos, quejas del operador…"></textarea>
       </div>
       <button class="btn-demo" style="width:100%;background:#c8a951;color:#111;border-style:solid;font-size:13px;padding:10px" onclick="enviarAgendar()">Agendar cita</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MIS CITAS -->
+<div class="modal-overlay" id="mis-citas-modal" onclick="if(event.target===this)cerrarMisCitas()">
+  <div class="modal" style="width:min(480px,96vw)">
+    <div class="modal-hdr">
+      <span class="modal-hdr-title">🗓️ Mis citas agendadas</span>
+      <button class="modal-close" onclick="cerrarMisCitas()">✕</button>
+    </div>
+    <div class="modal-body" id="mis-citas-body" style="padding:0">
+      <div class="loading-msg">Cargando…</div>
     </div>
   </div>
 </div>
@@ -949,6 +994,7 @@ async function fetchPrecios(tipoVehiculo) {
 function fmt(n) {
   return '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+function fmtKm(n) { return n.toLocaleString('es-MX') + ' KM'; }
 
 // ── SELECTOR DE KM CON TOTALES ───────────────────────────────────────────
 function poblarSelectKm(rows) {
@@ -1099,6 +1145,17 @@ function toast(msg, esError=false) {
 }
 
 // ── AGENDAR CITA ──────────────────────────────────────────────────────────
+function poblarAgKm() {
+  const sel = document.getElementById('ag-km');
+  if (sel.options.length > 1) return;
+  for (let km = 5000; km <= 100000; km += 5000) {
+    const opt = document.createElement('option');
+    opt.value = km;
+    opt.textContent = km.toLocaleString('es-MX') + ' KM';
+    sel.appendChild(opt);
+  }
+}
+
 function abrirAgendar() {
   const sel = document.getElementById('ag-eco');
   if (sel.options.length <= 2) {
@@ -1109,7 +1166,12 @@ function abrirAgendar() {
       sel.insertBefore(opt, sel.options[1]);
     });
   }
+  poblarAgKm();
   document.getElementById('ag-fecha').min = new Date().toISOString().split('T')[0];
+  const sesion = JSON.parse(sessionStorage.getItem('sesion_flotillas') || 'null');
+  if (sesion && sesion.nombre && !document.getElementById('ag-operador').value) {
+    document.getElementById('ag-operador').value = sesion.nombre;
+  }
   document.getElementById('agendar-modal').classList.add('visible');
 }
 
@@ -1119,22 +1181,86 @@ function cerrarAgendar() {
   modal.classList.remove('visible');
   document.getElementById('ag-eco').value = '';
   document.getElementById('ag-nueva-wrap').style.display = 'none';
-  document.getElementById('ag-unidad-desc').value = '';
+  document.getElementById('ag-armadora').value = '';
+  document.getElementById('ag-modelo').value = '';
+  document.getElementById('ag-anio').value = '';
+  document.getElementById('ag-operador').value = '';
   document.getElementById('ag-fecha').value = '';
   document.getElementById('ag-km').value = '';
   document.getElementById('ag-problema').value = '';
   document.getElementById('ag-disponibilidad').textContent = '';
+  document.getElementById('ag-servicio-incluye').style.display = 'none';
+  document.getElementById('ag-extras-wrap').style.display = 'none';
+  agExtras = [];
+  renderAgExtras();
 }
 
 function onAgEcoChange() {
   const esNueva = document.getElementById('ag-eco').value === '__nueva__';
   document.getElementById('ag-nueva-wrap').style.display = esNueva ? 'block' : 'none';
+  onAgKmChange();
 }
 
 function onAgModoChange() {
   const modo = document.querySelector('input[name="ag-modo"]:checked').value;
   document.getElementById('ag-km').style.display = modo === 'km' ? 'block' : 'none';
-  document.getElementById('ag-problema').style.display = modo === 'problema' ? 'block' : 'none';
+  const tieneContenido = document.getElementById('ag-servicio-incluye').dataset.hasContent === '1';
+  document.getElementById('ag-servicio-incluye').style.display = (modo === 'km' && tieneContenido) ? 'block' : 'none';
+  document.getElementById('ag-extras-wrap').style.display = (modo === 'km' && document.getElementById('ag-km').value) ? 'block' : 'none';
+}
+
+// ── QUÉ INCLUYE EL SERVICIO + EXTRAS ─────────────────────────────────────
+let agExtras = [];
+
+async function onAgKmChange() {
+  const km = parseInt(document.getElementById('ag-km').value);
+  const box = document.getElementById('ag-servicio-incluye');
+  const extrasWrap = document.getElementById('ag-extras-wrap');
+  const eco = document.getElementById('ag-eco').value;
+
+  if (!km) { box.style.display = 'none'; box.dataset.hasContent = '0'; extrasWrap.style.display = 'none'; return; }
+  extrasWrap.style.display = 'block';
+
+  const u = eco && eco !== '__nueva__' ? DB[eco] : null;
+  const tv = u ? getTipoVehiculo(u) : null;
+  if (!tv) { box.style.display = 'none'; box.dataset.hasContent = '0'; return; }
+
+  const kmCat = Math.max(10000, Math.round(km / 10000) * 10000);
+  box.style.display = 'block';
+  box.textContent = 'Consultando qué incluye este servicio…';
+  try {
+    const r = await fetch(`${API_URL}/precios_gaga?tipo_vehiculo=eq.${encodeURIComponent(tv)}&km_intervalo=eq.${kmCat}&select=descripcion,tipo&order=tipo`);
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows.length) {
+      box.innerHTML = 'Sin datos capturados para este kilometraje todavía — lo revisamos contigo en la cita.';
+      box.dataset.hasContent = '1';
+      return;
+    }
+    const nota = km !== kmCat
+      ? `<div style="color:#888;font-size:11px;margin-bottom:6px">Mostrando el servicio de ${fmtKm(kmCat)} más cercano — se ajusta en la cita si aplica.</div>`
+      : '';
+    box.innerHTML = nota + `<div style="color:#c8a951;font-weight:700;margin-bottom:4px">Este servicio normalmente incluye:</div>` +
+      rows.map(r => `• ${r.descripcion}`).join('<br>');
+    box.dataset.hasContent = '1';
+  } catch (e) { box.style.display = 'none'; box.dataset.hasContent = '0'; }
+}
+
+function agregarExtra() {
+  const input = document.getElementById('ag-extra-input');
+  const v = input.value.trim();
+  if (!v) return;
+  agExtras.push(v);
+  input.value = '';
+  renderAgExtras();
+}
+function quitarExtra(i) {
+  agExtras.splice(i, 1);
+  renderAgExtras();
+}
+function renderAgExtras() {
+  document.getElementById('ag-extras-chips').innerHTML = agExtras.map((e, i) =>
+    `<span class="ag-chip">${e}<button type="button" onclick="quitarExtra(${i})">✕</button></span>`
+  ).join('');
 }
 
 const CUPO_TOTAL_DIA = 15; // tope de citas/día en todo el taller (Enrique, 2026-07-26)
@@ -1166,7 +1292,11 @@ async function onAgFechaChange() {
 async function enviarAgendar() {
   if (window._agCupoLleno) { toast('⚠️ Ese día ya no tiene cupo — llama directo al 312 225 91 13', true); return; }
   const eco = document.getElementById('ag-eco').value;
-  const unidadDesc = document.getElementById('ag-unidad-desc').value.trim();
+  const armadora = document.getElementById('ag-armadora').value.trim();
+  const modeloNuevo = document.getElementById('ag-modelo').value.trim();
+  const anioNuevo = document.getElementById('ag-anio').value.trim();
+  const unidadDesc = [armadora, modeloNuevo, anioNuevo].filter(Boolean).join(' ');
+  const operador = document.getElementById('ag-operador').value.trim();
   const fecha = document.getElementById('ag-fecha').value;
   const hora = document.getElementById('ag-hora').value;
   const modo = document.querySelector('input[name="ag-modo"]:checked').value;
@@ -1174,17 +1304,22 @@ async function enviarAgendar() {
   const problema = document.getElementById('ag-problema').value.trim();
 
   if (!eco) { toast('⚠️ Selecciona tu unidad', true); return; }
-  if (eco === '__nueva__' && !unidadDesc) { toast('⚠️ Describe la unidad nueva', true); return; }
+  if (eco === '__nueva__' && !unidadDesc) { toast('⚠️ Describe la unidad nueva (armadora, modelo, año)', true); return; }
   if (!fecha) { toast('⚠️ Elige una fecha', true); return; }
-  if (modo === 'km' && !km) { toast('⚠️ Escribe el kilometraje o cambia a "describir el problema"', true); return; }
+  if (modo === 'km' && !km) { toast('⚠️ Selecciona el kilometraje o cambia a "describir el problema"', true); return; }
   if (modo === 'problema' && !problema) { toast('⚠️ Describe el problema', true); return; }
+
+  const sesion = JSON.parse(sessionStorage.getItem('sesion_flotillas') || 'null');
 
   const payload = {
     eco: eco === '__nueva__' ? null : eco,
     unidad_desc: eco === '__nueva__' ? unidadDesc : null,
+    operador: operador || null,
     fecha, hora,
     km_reportado: modo === 'km' ? parseInt(km) : null,
-    descripcion_problema: modo === 'problema' ? problema : null,
+    descripcion_problema: problema || null,
+    extras: agExtras.length ? agExtras.join('; ') : null,
+    compania: sesion ? sesion.compania : null,
   };
 
   const r = await fetch(`${API_URL}/citas`, {
@@ -1199,6 +1334,42 @@ async function enviarAgendar() {
   } else {
     toast('⚠️ Error al agendar, intenta de nuevo', true);
   }
+}
+
+// ── MIS CITAS ─────────────────────────────────────────────────────────────
+async function abrirMisCitas() {
+  document.getElementById('mis-citas-modal').classList.add('visible');
+  const body = document.getElementById('mis-citas-body');
+  body.innerHTML = '<div class="loading-msg">Cargando…</div>';
+  const sesion = JSON.parse(sessionStorage.getItem('sesion_flotillas') || 'null');
+  try {
+    let url = `${API_URL}/citas?order=fecha.asc,hora.asc&select=eco,unidad_desc,fecha,hora,estado,km_reportado`;
+    if (sesion && sesion.compania) url += `&compania=eq.${encodeURIComponent(sesion.compania)}`;
+    const r = await fetch(url);
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows.length) {
+      body.innerHTML = '<div class="loading-msg">Todavía no tienes citas agendadas.</div>';
+      return;
+    }
+    const hoy = new Date().toISOString().split('T')[0];
+    body.innerHTML = rows.map(c => {
+      const unidad = c.eco ? (DB[c.eco] ? `${c.eco} — ${DB[c.eco].marca} ${DB[c.eco].modelo}` : c.eco) : (c.unidad_desc || 'Unidad nueva');
+      const pasada = c.fecha < hoy;
+      return `<div class="mc-row">
+        <div>
+          <div style="color:#eee;font-weight:600">${unidad}</div>
+          <div style="color:#888;margin-top:2px">${new Date(c.fecha+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})} · ${c.hora}${c.km_reportado ? ' · '+fmtKm(c.km_reportado) : ''}</div>
+        </div>
+        <span class="mc-estado ${pasada ? 'confirmada' : (c.estado||'pendiente')}">${pasada ? 'Atendida' : (c.estado||'pendiente')}</span>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    body.innerHTML = '<div class="loading-msg" style="color:#e74c3c">Error al cargar tus citas.</div>';
+  }
+}
+
+function cerrarMisCitas() {
+  document.getElementById('mis-citas-modal').classList.remove('visible');
 }
 
 document.addEventListener('keydown', e => { if(e.key==='Escape') cerrarAgendar(); });

@@ -32,11 +32,14 @@ CREATE INDEX IF NOT EXISTS idx_precios_gaga_tipo_km
 CREATE TABLE IF NOT EXISTS citas (
   id                    serial PRIMARY KEY,
   eco                   text,               -- NULL si es unidad_desc (unidad nueva sin dar de alta)
-  unidad_desc           text,
+  unidad_desc           text,               -- armadora + modelo + año cuando la unidad no esta registrada
+  operador              text,               -- quien trae/maneja la unidad
   fecha                 date NOT NULL,
   hora                  text NOT NULL,
   km_reportado          integer,
-  descripcion_problema  text,
+  descripcion_problema  text,               -- queja/observacion del operador
+  extras                text,               -- items adicionales que el cliente pidio agregar al servicio de ese km
+  compania              text,               -- de la sesion (usuarios.compania) si inicio sesion
   estado                text NOT NULL DEFAULT 'pendiente',
   creado_en             timestamptz NOT NULL DEFAULT now()
 );
