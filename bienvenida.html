@@ -82,6 +82,7 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 .btn-entrar:hover .arrow-icon{transform:translateX(4px)}
 
 .hd-footer{margin-top:30px;font-size:11px;color:#3a3a3a;letter-spacing:.4px}
+#btn-miscitas-inicio:hover{color:#c8a951;border-color:rgba(200,169,81,.55);background:rgba(200,169,81,.06)}
 .hd-footer span{color:#555}
 
 /* ── PANTALLA MÓDULOS ── */
@@ -242,9 +243,14 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
     </a>
 
   </div>
-  <a class="btn-entrar" id="btn-agendar-inicio" href="flotilla.html?agendar=1" style="margin-top:36px;font-size:13px;padding:13px 36px">
-    📅 Agendar una cita <span class="arrow-icon">→</span>
-  </a>
+  <div style="display:flex;align-items:center;gap:14px;margin-top:36px">
+    <a class="btn-entrar" id="btn-agendar-inicio" href="flotilla.html?agendar=1" style="font-size:13px;padding:13px 36px">
+      📅 Agendar una cita <span class="arrow-icon">→</span>
+    </a>
+    <a id="btn-miscitas-inicio" href="flotilla.html?miscitas=1" style="display:inline-flex;align-items:center;gap:6px;color:#999;font-size:12px;text-decoration:none;border:1px solid rgba(200,169,81,.25);border-radius:30px;padding:11px 20px;transition:all .2s">
+      🗓️ Ver mis citas
+    </a>
+  </div>
   <div class="mod-footer">Henry's Diagnostics · Sistema de Gestión de Flotillas · v1.0</div>
 </div>
 
@@ -299,6 +305,8 @@ if(_real){
   });
   const btnAg = document.getElementById('btn-agendar-inicio');
   if(btnAg) btnAg.href = btnAg.href + '&real=1';
+  const btnMc = document.getElementById('btn-miscitas-inicio');
+  if(btnMc) btnMc.href = btnMc.href + '&real=1';
 } else {
   // mostrar aviso de que se está compartiendo en modo demo
   document.addEventListener('DOMContentLoaded',()=>{
