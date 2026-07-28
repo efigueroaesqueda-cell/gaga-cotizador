@@ -221,6 +221,27 @@ td{padding:9px 12px;vertical-align:middle}
   .side-panel{width:100vw;right:-100vw;border-left:none;border-top:2px solid #c8a951}
   .sp-grid{grid-template-columns:1fr}
 }
+/* RECORRIDO GUIADO (PRODUCT TOUR) */
+.btn-tour{background:#2a2a2a;border:1px solid #444;color:#c8a951;padding:7px 16px;border-radius:22px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-tour:hover{border-color:#c8a951;background:#242016}
+@keyframes tourPulse{0%{box-shadow:0 0 0 0 rgba(200,169,81,.7)}70%{box-shadow:0 0 0 9px rgba(200,169,81,0)}100%{box-shadow:0 0 0 0 rgba(200,169,81,0)}}
+.btn-tour.pulse-attention{animation:tourPulse 1.8s infinite}
+#tour-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1300}
+#tour-backdrop.show{display:block}
+#tour-highlight{display:none;position:fixed;z-index:1301;border:2px solid #c8a951;border-radius:10px;box-shadow:0 0 0 4000px rgba(0,0,0,.55);pointer-events:none;transition:all .25s ease}
+#tour-highlight.show{display:block}
+#tour-tooltip{display:none;position:fixed;z-index:1302;background:#1e1e1e;border:1px solid #c8a951;border-radius:12px;padding:16px;width:280px;box-shadow:0 12px 32px rgba(0,0,0,.5);transition:all .25s ease}
+#tour-tooltip.show{display:block}
+.tour-step-count{font-size:11px;color:#c8a951;font-weight:700;margin-bottom:6px}
+.tour-title{font-size:14px;font-weight:700;color:#eee;margin-bottom:6px}
+.tour-text{font-size:12px;color:#ccc;line-height:1.5;margin-bottom:14px}
+.tour-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tour-skip{font-size:11px;color:#666;cursor:pointer;background:none;border:none;padding:0}
+.tour-skip:hover{color:#aaa}
+.tour-nav{display:flex;gap:6px}
+.tour-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none}
+.tour-btn-prev{background:transparent;border:1px solid #444;color:#ccc}
+.tour-btn-next{background:linear-gradient(135deg,#c8a951,#a07820);color:#111}
 </style>
 </head>
 <body>
@@ -241,6 +262,7 @@ td{padding:9px 12px;vertical-align:middle}
     <a href="flotilla.html" class="nav-btn nav-btn-ghost">🚛 Portal Flotilla<small>Estado de la flota</small></a>
     <span class="nav-btn nav-btn-active">📊 Proyección<small>Módulo actual</small></span>
     <a href="index.html" class="nav-btn nav-btn-gold">🧮 Cotizador<small>Genera cotizaciones</small></a>
+    <button class="btn-tour" id="btn-tour" onclick="startTour()" title="Recorrido guiado por esta pantalla">🧭 Recorrido</button>
   </nav>
 </div>
 
@@ -587,17 +609,31 @@ const COSTOS = {
   OTROS:    [2500,4000,2500,6500,2500],
 };
 
+// GAGA confirmó (reunión de cierre 2026-07-27) que el intervalo real de
+// servicio NO es parejo: Tornado cada 6,000 KM, VW cada 15,000, el resto
+// (80% de la flota) sí cada 10,000. Ver gaga_reunion_cierre_20260727.md.
+function getIntervaloServicio(u) {
+  const g = u && u.grupo;
+  if (g === 'TORNADO') return 6000;
+  if (g === 'VW') return 15000;
+  return 10000;
+}
+
 function getCostoEstimado(eco, kmServicio) {
   const u = DB[eco];
   if (!u) return 0;
   const arr = COSTOS[u.grupo] || COSTOS.OTROS;
-  const idx = kmServicio/10000 - 1;
-  return arr[Math.min(Math.max(idx,0), arr.length-1)] || arr[arr.length-1];
+  // El arreglo de costos sigue key-ado por "número de servicio" (1er,2do,3ro…)
+  // sin importar el intervalo real del vehículo — solo cambia a qué KM cae cada uno.
+  const servicioNum = Math.max(1, Math.round(kmServicio / getIntervaloServicio(u)));
+  const idx = servicioNum - 1;
+  return arr[Math.min(idx, arr.length-1)] || arr[arr.length-1];
 }
 
-function calcProximo(km, kmUltimo) {
-  if (kmUltimo && kmUltimo > 0) return Math.ceil((kmUltimo+1)/10000)*10000;
-  return Math.ceil((km+1)/10000)*10000;
+function calcProximo(km, kmUltimo, intervalo) {
+  intervalo = intervalo || 10000;
+  if (kmUltimo && kmUltimo > 0) return Math.ceil((kmUltimo+1)/intervalo)*intervalo;
+  return Math.ceil((km+1)/intervalo)*intervalo;
 }
 
 function fmt(n){ return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0}); }
@@ -701,7 +737,7 @@ function recalcular() {
   Object.entries(DB).forEach(([eco, u]) => {
     const d = getKmUnidad(eco);
     if (!d.km) return;
-    const proximo = calcProximo(d.km, d.kmUltimo);
+    const proximo = calcProximo(d.km, d.kmUltimo, getIntervaloServicio(u));
     const restante = proximo - d.km;
     const costo = getCostoEstimado(eco, proximo);
     const diasEst = restante > 0 ? Math.ceil(restante / kmDia) : 0;
@@ -858,15 +894,106 @@ function toggleDemo() {
 
 init().then(()=>{
   if(new URLSearchParams(location.search).get('real')!=='1') toggleDemo();
+  if(!localStorage.getItem(LS_KEY_TOUR_PROYECCION)){
+    document.getElementById('btn-tour').classList.add('pulse-attention');
+    setTimeout(startTour, 900);
+  }
 });
+
+// ── RECORRIDO GUIADO (PRODUCT TOUR) ────────────────────────────────────────
+const LS_KEY_TOUR_PROYECCION = 'gaga_tour_visto_proyeccion';
+const TOUR_STEPS = [
+  {selector:'.hdr-nav', title:'Menú principal', text:'Desde aquí te mueves entre el Portal Flotilla, esta Proyección de inversión y el Cotizador. Este mismo botón de brújula vive en las 3 pantallas.', pos:'bottom'},
+  {selector:'#km-dia', title:'KM promedio por día', text:'Ajusta cuántos KM recorre en promedio cada unidad al día — toda la proyección (fechas y montos estimados) se recalcula sola con este número.', pos:'bottom'},
+  {selector:'.resumen', title:'Resumen — por KM restante', text:'Estas tarjetas agrupan las unidades por cuánto KM les falta para su próximo servicio (vencido, urgente, próximo, al día).', pos:'bottom'},
+  {selector:'.periodos', title:'Resumen — por días estimados', text:'Estas otras agrupan las MISMAS unidades pero por días estimados según el KM/día de arriba. Una unidad puede caer en un periodo distinto entre las dos vistas, pero el total de unidades e inversión siempre coincide.', pos:'top'},
+  {selector:'#tbl', title:'Detalle por unidad', text:'Toca cualquier tarjeta de arriba para filtrar esta tabla por ese grupo, o "✕ Quitar filtro" para ver todas otra vez.', pos:'top'},
+  {selector:'.fab-agendar', title:'Agendar una cita', text:'Agenda el próximo servicio de cualquier unidad — el sistema te muestra qué incluye según su kilometraje real.', pos:'left'},
+  {selector:'.fab-citas', title:'Ver tus citas', text:'Consulta las citas ya agendadas, o edítalas si algo cambió.', pos:'left'},
+  {selector:'#btn-demo', title:'Modo Demo', text:'Activa datos simulados para hacer una demostración sin mostrar cifras reales de GAGA — mientras está activo, nada se guarda de verdad.', pos:'bottom'},
+];
+let _tourIndex = 0;
+
+function startTour() {
+  _tourIndex = 0;
+  document.getElementById('tour-backdrop').classList.add('show');
+  document.getElementById('tour-tooltip').classList.add('show');
+  showTourStep();
+}
+
+function showTourStep() {
+  const step = TOUR_STEPS[_tourIndex];
+  const el = document.querySelector(step.selector);
+  if (!el) {
+    if (_tourIndex < TOUR_STEPS.length - 1) { nextTourStep(); } else { endTour(); }
+    return;
+  }
+  document.getElementById('tour-step-count').textContent = `Paso ${_tourIndex+1} de ${TOUR_STEPS.length}`;
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-text').textContent = step.text;
+  document.getElementById('tour-btn-prev').style.visibility = _tourIndex===0 ? 'hidden' : 'visible';
+  document.getElementById('tour-btn-next').textContent = _tourIndex===TOUR_STEPS.length-1 ? 'Terminar' : 'Siguiente';
+  el.scrollIntoView({block:'center', behavior:'smooth'});
+  positionTour(el, step);
+}
+
+function positionTour(el, step) {
+  const r = el.getBoundingClientRect();
+  const hl = document.getElementById('tour-highlight');
+  hl.style.left = (r.left-6)+'px';
+  hl.style.top = (r.top-6)+'px';
+  hl.style.width = (r.width+12)+'px';
+  hl.style.height = (r.height+12)+'px';
+  hl.classList.add('show');
+
+  const tip = document.getElementById('tour-tooltip');
+  const tw = 280, gap = 16;
+  const th = tip.offsetHeight || 160;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const space = { top:r.top, bottom:vh-r.bottom, left:r.left, right:vw-r.right };
+  const necesita = (l) => (l==='top'||l==='bottom') ? th+gap+8 : tw+gap+8;
+  let lado = step.pos || 'top';
+  if (space[lado] < necesita(lado)) {
+    lado = ['bottom','top','right','left'].reduce((mejor,l) =>
+      (space[l]-necesita(l)) > (space[mejor]-necesita(mejor)) ? l : mejor, 'bottom');
+  }
+  let left, top;
+  if (lado==='right') { left=r.right+gap; top=r.top; }
+  else if (lado==='left') { left=r.left-tw-gap; top=r.top; }
+  else if (lado==='bottom') { left=r.left; top=r.bottom+gap; }
+  else { left=r.left; top=r.top-th-gap; }
+  left = Math.max(8, Math.min(left, vw-tw-8));
+  top = Math.max(8, Math.min(top, vh-th-8));
+  tip.style.left = left+'px';
+  tip.style.top = top+'px';
+}
+
+function nextTourStep() {
+  if (_tourIndex >= TOUR_STEPS.length-1) { endTour(); return; }
+  _tourIndex++;
+  showTourStep();
+}
+function prevTourStep() {
+  if (_tourIndex<=0) return;
+  _tourIndex--;
+  showTourStep();
+}
+function endTour() {
+  document.getElementById('tour-backdrop').classList.remove('show');
+  document.getElementById('tour-highlight').classList.remove('show');
+  document.getElementById('tour-tooltip').classList.remove('show');
+  document.getElementById('btn-tour').classList.remove('pulse-attention');
+  localStorage.setItem(LS_KEY_TOUR_PROYECCION, '1');
+}
 
 // ── SIDE PANEL ────────────────────────────────────────────────────────────
 function fmtKm(n){ return n.toLocaleString('es-MX')+' KM'; }
 function fmtM(n){ return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0}); }
 
-function calcProximoFicha(km, kmUltimo) {
-  if (kmUltimo && kmUltimo > 0) return Math.ceil((kmUltimo+1)/10000)*10000;
-  return Math.ceil((km+1)/10000)*10000;
+function calcProximoFicha(km, kmUltimo, intervalo) {
+  intervalo = intervalo || 10000;
+  if (kmUltimo && kmUltimo > 0) return Math.ceil((kmUltimo+1)/intervalo)*intervalo;
+  return Math.ceil((km+1)/intervalo)*intervalo;
 }
 
 function abrirFicha(eco) {
@@ -882,7 +1009,7 @@ function abrirFicha(eco) {
 
   let estadoHtml = '';
   if (km) {
-    const proximo = calcProximoFicha(km, kmUltimo);
+    const proximo = calcProximoFicha(km, kmUltimo, getIntervaloServicio(u));
     const restante = proximo - km;
     let clase = restante<=0?'s-rojo':restante<1000?'s-rojo':restante<=3000?'s-amarillo':'s-verde';
     let label = restante<=0?'VENCIDO':restante<1000?'URGENTE':restante<=3000?'Próximo':'Al día';
@@ -925,8 +1052,9 @@ function abrirFicha(eco) {
   }
 
   const kmDia = parseInt(document.getElementById('km-dia').value)||200;
-  const costEst = km ? fmtM(getCostoEstimado(eco, km?calcProximoFicha(km,kmUltimo):10000)) : '—';
-  const diasEst = km ? Math.ceil(Math.max(0,calcProximoFicha(km,kmUltimo)-km)/kmDia) : null;
+  const intervaloFicha = getIntervaloServicio(u);
+  const costEst = km ? fmtM(getCostoEstimado(eco, km?calcProximoFicha(km,kmUltimo,intervaloFicha):10000)) : '—';
+  const diasEst = km ? Math.ceil(Math.max(0,calcProximoFicha(km,kmUltimo,intervaloFicha)-km)/kmDia) : null;
 
   document.getElementById('sp-body').innerHTML = `
     ${estadoHtml}
@@ -1082,7 +1210,11 @@ function renderExpTab(idx) {
   }
 }
 
-document.addEventListener('keydown', e => { if(e.key==='Escape') { cerrarExpediente(); cerrarFicha(); cerrarAgendar(); } });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('tour-tooltip').classList.contains('show')) { endTour(); return; }
+  cerrarExpediente(); cerrarFicha(); cerrarAgendar();
+});
 
 // ── TOAST ─────────────────────────────────────────────────────────────────
 function toast(msg, esError=false) {
@@ -1183,7 +1315,10 @@ async function onAgKmChange() {
   const tv = u ? getTipoVehiculo(u) : null;
   if (!tv) { box.style.display = 'none'; box.dataset.hasContent = '0'; return; }
 
-  const kmCat = Math.max(10000, Math.round(km / 10000) * 10000);
+  const intervalo = getIntervaloServicio(u);
+  const servicioNum = Math.max(1, Math.round(km / intervalo));
+  const kmCat = servicioNum * 10000;        // bucket del catálogo precios_gaga (sigue en múltiplos de 10k)
+  const kmRealAprox = servicioNum * intervalo; // KM real más cercano para ESTE vehículo (lo que se le muestra al cliente)
   box.style.display = 'block';
   box.textContent = 'Consultando qué incluye este servicio…';
   try {
@@ -1194,8 +1329,8 @@ async function onAgKmChange() {
       box.dataset.hasContent = '1';
       return;
     }
-    const nota = km !== kmCat
-      ? `<div style="color:#888;font-size:11px;margin-bottom:6px">Mostrando el servicio de ${fmtKm(kmCat)} más cercano — se ajusta en la cita si aplica.</div>`
+    const nota = km !== kmRealAprox
+      ? `<div style="color:#888;font-size:11px;margin-bottom:6px">Mostrando el servicio de ${fmtKm(kmRealAprox)} más cercano — se ajusta en la cita si aplica.</div>`
       : '';
     box.innerHTML = nota + `<div style="color:#c8a951;font-weight:700;margin-bottom:4px">Este servicio normalmente incluye:</div>` +
       rows.map(r => `• ${r.descripcion}`).join('<br>');
@@ -1386,5 +1521,21 @@ function cerrarMisCitas() {
   document.getElementById('mis-citas-modal').classList.remove('visible');
 }
 </script>
+
+<!-- RECORRIDO GUIADO -->
+<div id="tour-backdrop" onclick="endTour()"></div>
+<div id="tour-highlight"></div>
+<div id="tour-tooltip">
+  <div class="tour-step-count" id="tour-step-count"></div>
+  <div class="tour-title" id="tour-title"></div>
+  <div class="tour-text" id="tour-text"></div>
+  <div class="tour-actions">
+    <button class="tour-skip" onclick="endTour()">Saltar recorrido</button>
+    <div class="tour-nav">
+      <button class="tour-btn tour-btn-prev" id="tour-btn-prev" onclick="prevTourStep()">Atrás</button>
+      <button class="tour-btn tour-btn-next" id="tour-btn-next" onclick="nextTourStep()">Siguiente</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
